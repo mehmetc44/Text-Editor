@@ -1,0 +1,366 @@
+/* Resim Ekleme ve Boyutlandırma Stilleri */
+
+/* Editöre eklenen resim stilleri */
+.editor-image {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: outline 0.2s ease-in-out;
+}
+
+/* Seçili resim stilleri */
+.selected-image {
+    outline: 2px solid #0d6efd;
+    outline-offset: 1px;
+    z-index: 50;
+}
+
+/* Resim diyaloğu stilleri */
+.image-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    max-width: 500px;
+    z-index: 1050;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.image-preview {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+/* Boyutlandırma kulpları stilleri */
+.resize-handles {
+    position: absolute; /* Mutlak konumlandırma */
+    border: 1px dashed #0d6efd;
+    z-index: 100;
+    pointer-events: none;
+    box-sizing: border-box; /* Önemli: border dahil edilsin */
+    margin: 0;
+    padding: 0;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 8px; /* Daha küçük kulplar */
+    height: 8px; /* Daha küçük kulplar */
+    background-color: #fff;
+    border: 1px solid #0d6efd;
+    border-radius: 2px;
+    pointer-events: all;
+    cursor: nesw-resize;
+    z-index: 101;
+    box-sizing: border-box;
+}
+
+/* Kulp pozisyonları - tam kenar üzerinde olacak şekilde */
+.resize-handle-n {
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.resize-handle-ne {
+    top: -4px;
+    right: -4px;
+    cursor: nesw-resize;
+}
+
+.resize-handle-e {
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.resize-handle-se {
+    bottom: -4px;
+    right: -4px;
+    cursor: nwse-resize;
+}
+
+.resize-handle-s {
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.resize-handle-sw {
+    bottom: -4px;
+    left: -4px;
+    cursor: nesw-resize;
+}
+
+.resize-handle-w {
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.resize-handle-nw {
+    top: -4px;
+    left: -4px;
+    cursor: nwse-resize;
+}
+
+/* Resim özellikleri paneli - Geliştirilmiş Panel */
+.image-properties-panel {
+    position: absolute;
+    bottom: -180px; /* Daha büyük panel için artırıldı */
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #0d6efd;
+    border-radius: 0.25rem;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 102;
+    pointer-events: all;
+}
+
+.image-properties-panel .form-control-sm {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    height: auto;
+}
+
+.image-settings {
+    width: 100%;
+}
+
+/* Boyut girişleri alanı */
+.image-dimensions {
+    display: flex;
+    align-items: center;
+}
+
+.image-dimensions input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.25rem;
+}
+
+.dimension-separator {
+    margin: 0 5px;
+    color: #6c757d;
+}
+
+.aspect-ratio-lock {
+    margin-left: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.aspect-ratio-lock input {
+    position: absolute;
+    opacity: 0;
+}
+
+.aspect-ratio-lock i {
+    padding: 3px;
+    font-size: 12px;
+    color: #0d6efd;
+}
+
+.aspect-ratio-lock input:not(:checked) + i:before {
+    content: "\f3c1"; /* fa-unlock */
+}
+
+/* Buton grupları */
+.image-properties-panel .btn-group {
+    display: flex;
+}
+
+.image-properties-panel .btn-group .btn {
+    flex: 1;
+}
+
+/* Butonların stilini iyileştir */
+.image-properties-panel .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Hizalanmış resim stilleri */
+.editor-image.image-align-left {
+    float: left;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.editor-image.image-align-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.editor-image.image-align-right {
+    float: right;
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+
+
+/* styles.css dosyasına aşağıdaki stilleri ekleyin */
+
+/* Seçili Resim Stili */
+.selected-image {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+    z-index: 50;
+}
+
+/* Resim Araç Çubuğu Stilleri */
+#image-toolbar {
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 10px;
+}
+
+#image-toolbar .input-group-sm {
+    max-width: 100%;
+}
+
+#image-toolbar .form-control-sm {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    height: auto;
+}
+
+/* Responsive ayarlamalar */
+@media (max-width: 992px) {
+    #image-toolbar .input-group {
+        margin-bottom: 5px;
+    }
+}
+
+/* Resim Hizalama Stilleri */
+.editor-image.image-align-left {
+    float: left;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.editor-image.image-align-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0.5rem;
+}
+
+.editor-image.image-align-right {
+    float: right;
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+
+/* Boyutlandırma kulpları stilleri 
+   Bu kodu styles.css veya image-styles.css dosyanıza ekleyin */
+
+/* Boyutlandırma kulpları konteyner */
+.resize-handles {
+    position: absolute !important;
+    box-sizing: border-box !important;
+    pointer-events: none !important;
+    border: 1px dashed #0d6efd !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 100;
+}
+
+/* Boyutlandırma kulpu genel stil */
+.resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: #fff;
+    border: 1px solid #0d6efd;
+    border-radius: 2px;
+    pointer-events: all;
+    z-index: 101;
+    box-sizing: border-box;
+}
+
+/* Kulpların özel cursor stilleri */
+.resize-handle-n {
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.resize-handle-ne {
+    top: -4px;
+    right: -4px;
+    cursor: nesw-resize;
+}
+
+.resize-handle-e {
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.resize-handle-se {
+    bottom: -4px;
+    right: -4px;
+    cursor: nwse-resize;
+}
+
+.resize-handle-s {
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.resize-handle-sw {
+    bottom: -4px;
+    left: -4px;
+    cursor: nesw-resize;
+}
+
+.resize-handle-w {
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.resize-handle-nw {
+    top: -4px;
+    left: -4px;
+    cursor: nwse-resize;
+}
+
+/* Boyutlandırma sırasında kullanılacak cursor stil */
+body.resizing {
+    cursor: grabbing !important;
+}
+
+/* Boyutlandırma sırasında tüm kulpların rengini değiştir */
+body.resizing .resize-handle {
+    background-color: #0d6efd;
+    border-color: #fff;
+}

@@ -1,0 +1,254 @@
+/* Tablo İşlemleri ve Biçimlendirme Stilleri */
+
+/* Editör içindeki tablo stilleri */
+.editor-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+}
+
+/* Varsayılan tablo stilleri */
+.editor-table.table-default {
+    border: 1px solid #dee2e6;
+}
+
+.editor-table.table-default th,
+.editor-table.table-default td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+/* Kenarlıklı tablo */
+.editor-table.table-bordered {
+    border: 2px solid #dee2e6;
+}
+
+.editor-table.table-bordered th,
+.editor-table.table-bordered td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+/* Zebra desenli tablo */
+.editor-table.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Minimal tablo */
+.editor-table.table-minimal {
+    border: none;
+}
+
+.editor-table.table-minimal th {
+    border-bottom: 2px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+.editor-table.table-minimal td {
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+/* Tablo başlık hücresi */
+.editor-table th {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    text-align: left;
+}
+
+/* Seçili tablo ve hücre stilleri */
+.editor-table.selected-table {
+    outline: 2px solid #0d6efd;
+    outline-offset: 1px;
+}
+
+.editor-table .selected-cell {
+    outline: 2px solid #0d6efd;
+    outline-offset: -1px;
+    position: relative;
+}
+
+/* Tablo diyaloğu stilleri */
+.table-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    max-width: 600px;
+    z-index: 1050;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.table-preview-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.table-preview {
+    transform: scale(0.8);
+    transform-origin: top left;
+    width: 120%;
+    margin-bottom: 1rem;
+}
+
+/* Tablo önizleme stilleri */
+.editor-table.table-preview {
+    margin: 0;
+}
+
+.editor-table.table-preview th,
+.editor-table.table-preview td {
+    padding: 0.25rem;
+    font-size: 0.875rem;
+}
+
+ 
+
+/* Tablo içi düzenleme ipuçları */
+.editor-table [contenteditable=true]:focus {
+    outline: none;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.editor-table [contenteditable=true]:empty:before {
+    content: "İçerik...";
+    color: #aaa;
+    font-style: italic;
+}
+
+/* Hücre içeriği düzenleme için düzeltmeler */
+.editor-table td[contenteditable="true"],
+.editor-table th[contenteditable="true"] {
+    position: relative;
+    min-width: 30px;
+    min-height: 1.2em;
+}
+
+/* Boş hücre göstergesi için stil */
+.editor-table td[contenteditable="true"]:empty::before,
+.editor-table th[contenteditable="true"]:empty::before {
+    content: "";
+    display: inline-block;
+    width: 1px;
+    min-height: 1em;
+}
+
+/* Fare imleci hücre içinde kalması için */
+.editor-table td, .editor-table th {
+    cursor: text;
+}
+
+/* Tablolar için özel CSS stilleri */
+
+/* Tablo Araç Çubuğu */
+#table-toolbar {
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 10px;
+}
+
+/* Seçili tablo stili */
+.editor-table.selected-table {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Seçili hücre stili */
+.editor-table .selected-cell {
+    background-color: rgba(13, 110, 253, 0.1);
+    outline: 2px solid #0d6efd;
+    outline-offset: -2px;
+}
+
+/* Tablo stilleri - varsayılan */
+.editor-table.table-default {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.editor-table.table-default th,
+.editor-table.table-default td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+.editor-table.table-default th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* Tablo stilleri - kenarlıklı */
+.editor-table.table-bordered {
+    border: 2px solid #000;
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.editor-table.table-bordered th,
+.editor-table.table-bordered td {
+    border: 1px solid #000;
+    padding: 0.5rem;
+}
+
+.editor-table.table-bordered th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* Tablo stilleri - zebra desenli */
+.editor-table.table-striped {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.editor-table.table-striped th,
+.editor-table.table-striped td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+.editor-table.table-striped th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.editor-table.table-striped tbody tr:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Tablo stilleri - minimal */
+.editor-table.table-minimal {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.editor-table.table-minimal th,
+.editor-table.table-minimal td {
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+.editor-table.table-minimal th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: bold;
+}
+
+/* Responsive ayarlamalar */
+@media (max-width: 768px) {
+    #table-toolbar .btn-group {
+        margin-bottom: 5px;
+    }
+    
+    #table-toolbar .btn {
+        padding: .25rem .5rem;
+        font-size: .875rem;
+    }
+}
