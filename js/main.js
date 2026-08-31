@@ -6,6 +6,7 @@ import * as TextFormat from './modules/text-formatting.js';
 import { updateToolbarState } from './ui/toolbar-state.js';
 import { handlePaste } from './core/word-sanitizer.js';
 import * as ImageManager from './modules/image-manager.js';
+import * as TableManager from './modules/table-manager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elementleri
@@ -172,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Editör İçi Tıklamalarda Resim Seçimi
+    // Editör İçi Tıklamalarda Resim & Tablo Seçimi
     if (editor) {
         editor.addEventListener('click', (e) => {
             if (e.target.tagName === 'IMG') {
@@ -180,6 +181,26 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (!e.target.closest('.resize-handle-box')) {
                 ImageManager.clearImageSelection();
             }
+
+            const cell = e.target.closest('td, th');
+            if (cell) {
+                TableManager.setSelectedCell(cell);
+            }
+        });
+    }
+
+    // Tablo Ekle Onayı
+    const btnInsertTableConfirm = document.getElementById('btn-insert-table-confirm');
+    if (btnInsertTableConfirm) {
+        btnInsertTableConfirm.addEventListener('click', () => {
+            const rowsInput = document.getElementById('input-tbl-rows');
+            const colsInput = document.getElementById('input-tbl-cols');
+            const rows = rowsInput ? parseInt(rowsInput.value) || 3 : 3;
+            const cols = colsInput ? parseInt(colsInput.value) || 3 : 3;
+
+            TableManager.createTable(editor, rows, cols);
+
+            if (modalTable) modalTable.classList.add('hidden');
         });
     }
 
