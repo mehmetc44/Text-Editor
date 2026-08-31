@@ -95,10 +95,20 @@ body {
 #editor {
     min-height: 900px;
     outline: none;
-    line-height: 1.6;
+    line-height: 1.15;
     font-size: 14px;
     color: var(--color-text-main);
     font-family: 'Liberation Sans', Arial, sans-serif;
+}
+
+#editor p, #editor div {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.25;
+}
+
+#editor span {
+    display: inline;
 }
 
 #editor:empty::before {

@@ -39,6 +39,38 @@
     display: list-item !important;
 }
 
+/* Explicit Heading Styles Override for Tailwind CSS Reset */
+#editor h1 {
+    font-size: 2em !important;
+    font-weight: 700 !important;
+    margin-top: 0.67em !important;
+    margin-bottom: 0.5em !important;
+    line-height: 1.25 !important;
+}
+
+#editor h2 {
+    font-size: 1.5em !important;
+    font-weight: 700 !important;
+    margin-top: 0.75em !important;
+    margin-bottom: 0.5em !important;
+    line-height: 1.3 !important;
+}
+
+#editor h3 {
+    font-size: 1.25em !important;
+    font-weight: 600 !important;
+    margin-top: 0.83em !important;
+    margin-bottom: 0.5em !important;
+    line-height: 1.4 !important;
+}
+
+#editor h4 {
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+    margin-top: 1em !important;
+    margin-bottom: 0.5em !important;
+}
+
 /* Code Block & Blockquote Styling */
 #editor pre {
     background-color: #0f172a !important;

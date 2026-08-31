@@ -12,7 +12,8 @@ function initApp() {
     const htmlTextarea = document.getElementById('html-textarea');
     const htmlEditorContainer = document.getElementById('html-editor-container');
     const htmlPreviewPanel = document.getElementById('html-preview-panel');
-    const previewContent = document.getElementById('preview-content');
+    // MS Word Paragraf Ayarı
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
 
     // Durum Çubuğu Elementleri
     const statWords = document.getElementById('stat-words');
@@ -56,12 +57,91 @@ function initApp() {
         const range = selection.getRangeAt(0);
         if (range.collapsed) return;
 
-        const span = document.createElement('span');
-        span.style[styleName] = styleValue;
-
         try {
-            span.appendChild(range.extractContents());
+            const extracted = range.extractContents();
+
+            // 1. Çıkarılan fragment içindeki iç içe geçmiş aynı stili taşıyan span'ları düzleştir
+            extracted.querySelectorAll('span, font').forEach(s => {
+                if (s.style && s.style[styleName]) {
+                    s.style[styleName] = '';
+                }
+                // font etiketlerindeki size attribute'unu da kaldır
+                if (s.tagName === 'FONT') {
+                    s.removeAttribute('size');
+                }
+                // Stil kalmadıysa span'ı unwrap et (çocuklarını dışarı çıkar)
+                const styleAttr = s.getAttribute('style');
+                if ((!styleAttr || styleAttr.trim() === '') && s.tagName !== 'FONT') {
+                    while (s.firstChild) s.parentNode.insertBefore(s.firstChild, s);
+                    s.remove();
+                }
+            });
+
+            // 2. Yeni temiz span oluştur
+            const span = document.createElement('span');
+            span.style[styleName] = styleValue;
+            span.appendChild(extracted);
             range.insertNode(span);
+
+            // 3. ATA (ancestor) span'ları kontrol et:
+            //    Eğer bu span'ın üstünde aynı stili taşıyan bir span varsa,
+            //    o ata span'ı parçala (split) - böylece eski büyük font-size
+            //    satır yüksekliğini bozmaz.
+            let ancestor = span.parentNode;
+            while (ancestor && ancestor !== editor) {
+                if (ancestor.nodeType === Node.ELEMENT_NODE &&
+                    ancestor.tagName === 'SPAN' &&
+                    ancestor.style[styleName]) {
+
+                    // Ata span'ı 3 parçaya böl: [önce] [bizim span] [sonra]
+                    const before = document.createDocumentFragment();
+                    const after = document.createDocumentFragment();
+                    let foundSelf = false;
+
+                    while (ancestor.firstChild) {
+                        const child = ancestor.firstChild;
+                        if (child === span) {
+                            foundSelf = true;
+                            ancestor.removeChild(child);
+                            continue;
+                        }
+                        if (!foundSelf) {
+                            before.appendChild(child);
+                        } else {
+                            after.appendChild(child);
+                        }
+                    }
+
+                    const parent = ancestor.parentNode;
+
+                    // "Önceki" çocukları ata span klonuyla sar
+                    if (before.childNodes.length > 0) {
+                        const beforeClone = ancestor.cloneNode(false);
+                        beforeClone.appendChild(before);
+                        parent.insertBefore(beforeClone, ancestor);
+                    }
+
+                    // Bizim span'ı ata span'ın yerine koy (artık ata stili dışında)
+                    parent.insertBefore(span, ancestor);
+
+                    // "Sonraki" çocukları ata span klonuyla sar
+                    if (after.childNodes.length > 0) {
+                        const afterClone = ancestor.cloneNode(false);
+                        afterClone.appendChild(after);
+                        parent.insertBefore(afterClone, ancestor);
+                    }
+
+                    // Eski ata span'ı kaldır
+                    parent.removeChild(ancestor);
+                    break;
+                }
+                ancestor = ancestor.parentNode;
+            }
+
+            // 4. Boş span/font etiketlerini temizle
+            editor.querySelectorAll('span:empty, font:empty').forEach(el => el.remove());
+
+            // 5. Seçimi yeni span üzerine geri koy
             selection.removeAllRanges();
             const newRange = document.createRange();
             newRange.selectNodeContents(span);
@@ -230,7 +310,6 @@ function initApp() {
         editor.focus();
         const val = e.target.value;
         if (val === 'pre') {
-            // Tüm sayfayı pre yapmasını engelle: Sadece seçili metni pre/code olarak sarmala
             const selection = window.getSelection();
             if (selection && selection.rangeCount > 0) {
                 const range = selection.getRangeAt(0);
@@ -243,7 +322,12 @@ function initApp() {
                 range.insertNode(pre);
             }
         } else {
-            exec('formatBlock', `<${val}>`);
+            const tag = val.toLowerCase();
+            try {
+                document.execCommand('formatBlock', false, `<${tag}>`);
+            } catch (err) {
+                document.execCommand('formatBlock', false, tag);
+            }
         }
         updateStats();
     });
@@ -316,6 +400,23 @@ function initApp() {
             toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
             toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
             toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
+
+            // Başlık Dropdown Senkronizasyonu
+            const selectHeading = document.getElementById('select-heading');
+            if (selectHeading) {
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                    let parentNode = selection.anchorNode;
+                    if (parentNode && parentNode.nodeType === Node.TEXT_NODE) parentNode = parentNode.parentNode;
+                    if (parentNode && editor.contains(parentNode)) {
+                        const blockNode = parentNode.closest('h1, h2, h3, h4, blockquote, pre, p');
+                        if (blockNode) {
+                            const tagName = blockNode.tagName.toLowerCase();
+                            selectHeading.value = tagName;
+                        }
+                    }
+                }
+            }
         } catch (err) {
             // Safe fallback
         }

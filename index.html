@@ -90,23 +90,25 @@
 
                 <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
 
-                <!-- Revizyon Geçmişi (Hover ile Açılan Alt Menü) -->
+                <!-- Revizyon Geçmişi (Hover ile Açılan Kesintisiz Alt Menü) -->
                 <div class="relative group/rev">
                     <div class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer">
                         <span><i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i>Revizyon Geçmişi</span>
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
                     </div>
 
-                    <!-- Alt Menü -->
-                    <div class="hidden group-hover/rev:block absolute left-full top-0 ml-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded-md py-1 w-52 z-50 text-slate-700 dark:text-slate-200">
-                        <button type="button" id="menu-save-revision" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                            <i class="fa-solid fa-bookmark text-emerald-500 mr-2"></i>
-                            <span>Mevcut Revizyonu Kaydet</span>
-                        </button>
-                        <button type="button" id="menu-open-revisions" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                            <i class="fa-solid fa-list-check text-blue-500 mr-2"></i>
-                            <span>Revizyon Geçmişini Aç</span>
-                        </button>
+                    <!-- Kesintisiz Hover Köprüsü (Boşluksuz Köprü) -->
+                    <div class="hidden group-hover/rev:block absolute left-full top-0 -ml-2 pl-2 z-50">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md py-1 w-52 text-slate-700 dark:text-slate-200">
+                            <button type="button" id="menu-save-revision" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                                <i class="fa-solid fa-bookmark text-emerald-500 mr-2"></i>
+                                <span>Mevcut Revizyonu Kaydet</span>
+                            </button>
+                            <button type="button" id="menu-open-revisions" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                                <i class="fa-solid fa-list-check text-blue-500 mr-2"></i>
+                                <span>Revizyon Geçmişini Aç</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
