@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belge 1 - Meditör Writer</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        libre: {
+                            bg: '#e2e8f0',
+                            border: '#cbd5e1',
+                            active: '#dbeafe',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom Editor Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans select-none overflow-x-hidden">
+
+    <!-- 1. Window Title Bar (Pencere Başlığı) -->
+    <div class="bg-slate-800 text-slate-200 px-3 py-1 text-xs flex items-center justify-between border-b border-slate-700">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-file-word text-blue-400"></i>
+            <span class="font-medium tracking-wide">Belge 1 - Meditör Writer</span>
+        </div>
+        <div class="flex items-center space-x-3 text-[11px]">
+            <button type="button" id="btn-toggle-theme" title="Gece/Gündüz Modu" class="hover:text-white transition">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline-block text-amber-400"></i>
+            </button>
+            <span class="text-slate-500">|</span>
+            <span id="save-status" class="text-emerald-400 font-mono"><i class="fa-solid fa-circle-check mr-1"></i>Kaydedildi</span>
+        </div>
+    </div>
+
+    <!-- 2. Main Desktop Menu Bar (Dosya, Düzenle, Görünüm, Ekle, Biçim, Tablo...) -->
+    <nav class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 px-2 py-0.5 flex items-center space-x-1 relative z-30 text-xs">
+        <!-- Dosya Menu -->
+        <div class="relative group">
+            <div class="menu-bar-item">Dosya</div>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="menu-file-new" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
+                    <span><i class="fa-regular fa-file mr-2"></i>Yeni Belge</span>
+                    <span class="text-slate-400 text-[10px]">Ctrl+N</span>
+                </button>
+                <button type="button" id="btn-export-file" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
+                    <span><i class="fa-solid fa-download mr-2"></i>HTML Olarak Kaydet</span>
+                    <span class="text-slate-400 text-[10px]">Ctrl+S</span>
+                </button>
+                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                <button type="button" id="menu-file-print" onclick="window.print()" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
+                    <span><i class="fa-solid fa-print mr-2"></i>Yazdır</span>
+                    <span class="text-slate-400 text-[10px]">Ctrl+P</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Düzenle Menu -->
+        <div class="relative group">
+            <div class="menu-bar-item">Düzenle</div>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="menu-edit-undo" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
+                    <span><i class="fa-solid fa-rotate-left mr-2"></i>Geri Al</span>
+                    <span class="text-slate-400 text-[10px]">Ctrl+Z</span>
+                </button>
+                <button type="button" id="menu-edit-redo" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
+                    <span><i class="fa-solid fa-rotate-right mr-2"></i>Yinele</span>
+                    <span class="text-slate-400 text-[10px]">Ctrl+Y</span>
+                </button>
+                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                <button type="button" id="btn-clear-all" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-rose-600 dark:text-rose-400">
+                    <i class="fa-solid fa-trash-can mr-2"></i>Tüm İçeriği Temizle
+                </button>
+            </div>
+        </div>
+
+        <!-- Görünüm Menu -->
+        <div class="relative group">
+            <div class="menu-bar-item">Görünüm</div>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="btn-toggle-html" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-code mr-2"></i>HTML Kaynak Kodu
+                </button>
+                <button type="button" id="btn-toggle-preview" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-eye mr-2"></i>Baskı Önizleme
+                </button>
+            </div>
+        </div>
+
+        <!-- Ekle Menu -->
+        <div class="relative group">
+            <div class="menu-bar-item">Ekle</div>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="menu-insert-image" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-regular fa-image mr-2"></i>Resim...
+                </button>
+                <button type="button" id="menu-insert-table" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-table mr-2"></i>Tablo...
+                </button>
+                <button type="button" id="btn-add-link" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-link mr-2"></i>Köprü (Link)
+                </button>
+                <button type="button" id="btn-insert-hr" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-minus mr-2"></i>Yatay Çizgi
+                </button>
+            </div>
+        </div>
+
+        <!-- Biçim Menu -->
+        <div class="relative group">
+            <div class="menu-bar-item">Biçim</div>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="btn-clear-format" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-remove-format mr-2"></i>Biçimlendirmeyi Temizle
+                </button>
+            </div>
+        </div>
+
+        <!-- Tablo Menu -->
+        <div class="relative group">
+            <div class="menu-bar-item">Tablo</div>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="menu-table-add" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-plus mr-2"></i>Tablo Ekle...
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 3. Standard Toolbar (Row 1: File, Edit, Action Icons) -->
+    <div class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 px-2 py-1 flex flex-wrap items-center gap-1 text-xs">
+        <!-- New, Save, Print -->
+        <button type="button" id="tb-new" title="Yeni Belge" class="desktop-btn"><i class="fa-regular fa-file"></i></button>
+        <button type="button" id="tb-save" title="Kaydet" class="desktop-btn"><i class="fa-regular fa-floppy-disk"></i></button>
+        <button type="button" id="tb-print" onclick="window.print()" title="Yazdır" class="desktop-btn"><i class="fa-solid fa-print"></i></button>
+        
+        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+        <!-- Cut, Copy, Paste -->
+        <button type="button" id="btn-copy-html" title="HTML Kopyala" class="desktop-btn"><i class="fa-regular fa-copy"></i></button>
+        <button type="button" id="btn-undo" title="Geri Al" class="desktop-btn"><i class="fa-solid fa-rotate-left"></i></button>
+        <button type="button" id="btn-redo" title="Yinele" class="desktop-btn"><i class="fa-solid fa-rotate-right"></i></button>
+
+        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+        <!-- Inserts -->
+        <button type="button" id="btn-modal-image" title="Resim Ekle" class="desktop-btn text-blue-600 dark:text-blue-400"><i class="fa-regular fa-image mr-1"></i>Resim</button>
+        <button type="button" id="btn-modal-table" title="Tablo Ekle" class="desktop-btn text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-table mr-1"></i>Tablo</button>
+    </div>
+
+    <!-- 4. Formatting Toolbar (Row 2: Styles, Fonts, Sizes, Formatting) -->
+    <div class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 px-2 py-1 flex flex-wrap items-center gap-1.5 text-xs">
+        
+        <!-- Style / Heading Dropdown -->
+        <select id="select-heading" class="desktop-select w-32">
+            <option value="p" selected>Varsayılan Paragraf</option>
+            <option value="h1">Başlık 1 (H1)</option>
+            <option value="h2">Başlık 2 (H2)</option>
+            <option value="h3">Başlık 3 (H3)</option>
+            <option value="h4">Başlık 4 (H4)</option>
+            <option value="blockquote">Alıntı Bloğu</option>
+            <option value="pre">Kod Bloğu</option>
+        </select>
+
+        <!-- Font Family Dropdown -->
+        <select id="select-font-family" class="desktop-select w-36">
+            <option value="'Liberation Sans', Arial, sans-serif" selected>Liberation Sans</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="'Fira Code', monospace">Fira Code</option>
+        </select>
+
+        <!-- Font Size Dropdown -->
+        <select id="select-font-size" class="desktop-select w-16">
+            <option value="10px">10 pt</option>
+            <option value="12px">12 pt</option>
+            <option value="14px" selected>14 pt</option>
+            <option value="16px">16 pt</option>
+            <option value="18px">18 pt</option>
+            <option value="24px">24 pt</option>
+            <option value="36px">36 pt</option>
+        </select>
+
+        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5"></div>
+
+        <!-- Bold, Italic, Underline, Strikethrough -->
+        <button type="button" id="btn-bold" title="Kalın (Ctrl+B)" class="desktop-btn font-bold">K</button>
+        <button type="button" id="btn-italic" title="İtalik (Ctrl+I)" class="desktop-btn italic">İ</button>
+        <button type="button" id="btn-underline" title="Altı Çizili (Ctrl+U)" class="desktop-btn underline">A</button>
+        <button type="button" id="btn-strikethrough" title="Üstü Çizili" class="desktop-btn line-through">Ü</button>
+
+        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5"></div>
+
+        <!-- Text Color & Background Color Pickers -->
+        <div class="relative">
+            <button type="button" id="btn-text-color" title="Yazı Rengi" class="desktop-btn flex items-center space-x-1">
+                <i class="fa-solid fa-font text-slate-800 dark:text-slate-200"></i>
+                <div id="text-color-indicator" class="w-2.5 h-1 bg-red-600 rounded-full"></div>
+            </button>
+            <div id="dropdown-text-color" class="hidden absolute left-0 top-full mt-1 p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded z-50 grid grid-cols-5 gap-1">
+                <button type="button" class="w-5 h-5 rounded bg-slate-900" data-color="#0f172a"></button>
+                <button type="button" class="w-5 h-5 rounded bg-red-600" data-color="#dc2626"></button>
+                <button type="button" class="w-5 h-5 rounded bg-amber-500" data-color="#f59e0b"></button>
+                <button type="button" class="w-5 h-5 rounded bg-emerald-600" data-color="#059669"></button>
+                <button type="button" class="w-5 h-5 rounded bg-blue-600" data-color="#2563eb"></button>
+                <button type="button" class="w-5 h-5 rounded bg-purple-600" data-color="#9333ea"></button>
+            </div>
+        </div>
+
+        <div class="relative">
+            <button type="button" id="btn-bg-color" title="Arka Plan Vurgu Rengi" class="desktop-btn flex items-center space-x-1">
+                <i class="fa-solid fa-highlighter text-slate-800 dark:text-slate-200"></i>
+                <div id="bg-color-indicator" class="w-2.5 h-1 bg-yellow-300 rounded-full"></div>
+            </button>
+            <div id="dropdown-bg-color" class="hidden absolute left-0 top-full mt-1 p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded z-50 grid grid-cols-5 gap-1">
+                <button type="button" class="w-5 h-5 rounded bg-yellow-200" data-bgcolor="#fef08a"></button>
+                <button type="button" class="w-5 h-5 rounded bg-emerald-200" data-bgcolor="#a7f3d0"></button>
+                <button type="button" class="w-5 h-5 rounded bg-sky-200" data-bgcolor="#bae6fd"></button>
+                <button type="button" class="w-5 h-5 rounded bg-pink-200" data-bgcolor="#fbcfe8"></button>
+                <button type="button" class="w-5 h-5 rounded bg-transparent border" data-bgcolor="transparent"></button>
+            </div>
+        </div>
+
+        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5"></div>
+
+        <!-- Alignments -->
+        <button type="button" id="btn-align-left" title="Sola Hizala" class="desktop-btn"><i class="fa-solid fa-align-left"></i></button>
+        <button type="button" id="btn-align-center" title="Ortala" class="desktop-btn"><i class="fa-solid fa-align-center"></i></button>
+        <button type="button" id="btn-align-right" title="Sağa Hizala" class="desktop-btn"><i class="fa-solid fa-align-right"></i></button>
+        <button type="button" id="btn-align-justify" title="İki Yana Yasla" class="desktop-btn"><i class="fa-solid fa-align-justify"></i></button>
+
+        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5"></div>
+
+        <!-- Lists -->
+        <button type="button" id="btn-list-ul" title="Madde İşaretli Liste" class="desktop-btn"><i class="fa-solid fa-list-ul"></i></button>
+        <button type="button" id="btn-list-ol" title="Numaralı Liste" class="desktop-btn"><i class="fa-solid fa-list-ol"></i></button>
+        <button type="button" id="btn-indent" title="Girintiyi Artır" class="desktop-btn"><i class="fa-solid fa-indent"></i></button>
+        <button type="button" id="btn-outdent" title="Girintiyi Azalt" class="desktop-btn"><i class="fa-solid fa-outdent"></i></button>
+    </div>
+
+    <!-- 5. Horizontal Ruler (Yatay Cetvel) -->
+    <div class="ruler-container flex items-end px-4 overflow-hidden shadow-xs">
+        <div class="w-[816px] mx-auto relative h-full border-x border-slate-400/40">
+            <!-- Ruler Ticks Generation -->
+            <div class="absolute left-0 bottom-0 text-[8px] font-mono flex justify-between w-full px-2 text-slate-400 select-none">
+                <span>0 cm</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span><span>14</span><span>16</span><span>18 cm</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Main Desktop Page Workspace -->
+    <div class="flex-1 bg-slate-300 dark:bg-slate-950 overflow-auto p-6 flex justify-center items-start">
+        
+        <!-- A4 Page Container -->
+        <div id="editor-page">
+            
+            <!-- Main ContentEditable Area -->
+            <div id="editor" contenteditable="true" data-placeholder="Metninizi buraya yazmaya başlayın..." spellcheck="true">
+                <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 12px;">LibreOffice Writer Tarzı Metin Düzenleyici</h2>
+                <p>Bu metin alanı tarayıcı üzerinde çalışan saf <strong>HTML5, Vanilla JavaScript ve Tailwind CSS</strong> ile hazırlanmıştır. İhtiyacınıza göre metin biçimlendirebilir, resim ve tablo ekleyebilirsiniz.</p>
+            </div>
+
+            <!-- HTML Source Code Mode Container (Hidden by default) -->
+            <div id="html-editor-container" class="hidden min-h-[800px] flex flex-col">
+                <div class="bg-slate-900 text-slate-300 px-3 py-1.5 text-xs font-mono rounded-t flex justify-between items-center">
+                    <span><i class="fa-solid fa-code text-blue-400 mr-2"></i>HTML Kaynak Kodu</span>
+                </div>
+                <textarea id="html-textarea" class="w-full flex-1 min-h-[750px] p-4 bg-slate-950 text-emerald-400 font-mono text-xs rounded-b border-0 outline-none resize-none" spellcheck="false"></textarea>
+            </div>
+
+            <!-- Live Preview Panel Container (Hidden by default) -->
+            <div id="html-preview-panel" class="hidden min-h-[800px] p-4 border border-dashed border-blue-400">
+                <div id="preview-content"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 7. LibreOffice Classic Status Bar (En Alt Durum Çubuğu) -->
+    <footer class="bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-800 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center justify-between z-30 select-none">
+        <div class="flex items-center space-x-4 text-[11px]">
+            <span>Sayfa 1 / 1</span>
+            <span class="text-slate-300">|</span>
+            <span><strong id="stat-words" class="font-semibold text-slate-800 dark:text-slate-200">0</strong> sözcük, <strong id="stat-chars" class="font-semibold text-slate-800 dark:text-slate-200">0</strong> karakter</span>
+            <span class="text-slate-300">|</span>
+            <span>Varsayılan Sayfa Stili</span>
+            <span class="text-slate-300">|</span>
+            <span>Türkçe (Türkiye)</span>
+        </div>
+
+        <div class="flex items-center space-x-3 text-[11px]">
+            <span class="text-emerald-600 dark:text-emerald-400 font-medium"><i class="fa-solid fa-pen-to-square mr-1"></i>Yazma Modu</span>
+            <span class="text-slate-300">|</span>
+            <!-- Zoom Controls -->
+            <div class="flex items-center space-x-1">
+                <button type="button" onclick="alert('Yakınlaştırma: %100')" class="hover:text-slate-900 dark:hover:text-white"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                <span class="font-mono font-medium">100%</span>
+                <button type="button" onclick="alert('Yakınlaştırma: %100')" class="hover:text-slate-900 dark:hover:text-white"><i class="fa-solid fa-plus text-[10px]"></i></button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals Section -->
+
+    <!-- Image Insert Modal -->
+    <div id="modal-image" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-md shadow-2xl border border-slate-300 dark:border-slate-700 max-w-md w-full overflow-hidden text-xs">
+            <div class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                <span>Resim Ekle</span>
+                <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <div class="flex border-b border-slate-200 dark:border-slate-700 text-xs">
+                    <button type="button" id="tab-img-url" class="px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400">URL Bağlantısı</button>
+                    <button type="button" id="tab-img-file" class="px-3 py-1.5 text-slate-500 hover:text-slate-700">Dosya Yükle</button>
+                </div>
+                <div id="pane-img-url">
+                    <label class="block mb-1 font-medium">Resim Bağlantısı (URL)</label>
+                    <input type="url" id="input-img-url" placeholder="https://ornek.com/resim.jpg" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 outline-none">
+                </div>
+                <div id="pane-img-file" class="hidden">
+                    <label class="block mb-1 font-medium">Yerel Dosya Seçin</label>
+                    <input type="file" id="input-img-file" accept="image/*" class="w-full text-xs text-slate-500 file:py-1 file:px-3 file:border-0 file:bg-blue-50 file:text-blue-700 file:rounded">
+                </div>
+                <div>
+                    <label class="block mb-1 font-medium">Alternatif Metin (Alt)</label>
+                    <input type="text" id="input-img-alt" placeholder="Resim açıklaması" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 outline-none">
+                </div>
+            </div>
+            <div class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-end space-x-2">
+                <button type="button" class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800">İptal</button>
+                <button type="button" id="btn-insert-image-confirm" class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium">Resmi Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Insert Modal -->
+    <div id="modal-table" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-md shadow-2xl border border-slate-300 dark:border-slate-700 max-w-xs w-full overflow-hidden text-xs">
+            <div class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                <span>Tablo Oluştur</span>
+                <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block mb-1 font-medium">Satır Sayısı</label>
+                        <input type="number" id="input-tbl-rows" min="1" max="20" value="3" class="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Sütun Sayısı</label>
+                        <input type="number" id="input-tbl-cols" min="1" max="15" value="3" class="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900">
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-end space-x-2">
+                <button type="button" class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800">İptal</button>
+                <button type="button" id="btn-insert-table-confirm" class="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium">Tablo Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
