@@ -368,6 +368,105 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStats();
     }
 
+    // CANLI 8-NOKTA GÖRSEL BOYUTLANDIRMA (IMAGE RESIZER)
+    let activeImage = null;
+    let resizeOverlay = null;
+
+    function selectImage(img) {
+        clearImageSelection();
+        activeImage = img;
+        img.classList.add('selected-image');
+        createResizeOverlay(img);
+    }
+
+    function clearImageSelection() {
+        if (activeImage) {
+            activeImage.classList.remove('selected-image');
+            activeImage = null;
+        }
+        if (resizeOverlay && resizeOverlay.parentNode) {
+            resizeOverlay.parentNode.removeChild(resizeOverlay);
+            resizeOverlay = null;
+        }
+    }
+
+    function createResizeOverlay(img) {
+        resizeOverlay = document.createElement('div');
+        resizeOverlay.className = 'resize-handle-box';
+        resizeOverlay.style.top = `${img.offsetTop}px`;
+        resizeOverlay.style.left = `${img.offsetLeft}px`;
+        resizeOverlay.style.width = `${img.offsetWidth}px`;
+        resizeOverlay.style.height = `${img.offsetHeight}px`;
+
+        const positions = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
+        positions.forEach(pos => {
+            const dot = document.createElement('div');
+            dot.className = `resize-dot resize-${pos}`;
+            if (pos.includes('n')) dot.style.top = '-4px';
+            if (pos.includes('s')) dot.style.bottom = '-4px';
+            if (pos.includes('w')) dot.style.left = '-4px';
+            if (pos.includes('e')) dot.style.right = '-4px';
+            if (pos === 'n' || pos === 's') dot.style.left = 'calc(50% - 4px)';
+            if (pos === 'w' || pos === 'e') dot.style.top = 'calc(50% - 4px)';
+            dot.style.cursor = `${pos}-resize`;
+
+            dot.addEventListener('mousedown', (e) => startResizing(e, pos, img));
+            resizeOverlay.appendChild(dot);
+        });
+
+        if (img.parentNode) {
+            img.parentNode.insertBefore(resizeOverlay, img.nextSibling);
+        }
+    }
+
+    function startResizing(e, handlePosition, img) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startWidth = img.offsetWidth;
+        const startHeight = img.offsetHeight;
+        const aspectRatio = startWidth / startHeight;
+
+        function onMouseMove(moveEvent) {
+            const deltaX = moveEvent.clientX - startX;
+            const deltaY = moveEvent.clientY - startY;
+            let newWidth = startWidth;
+            let newHeight = startHeight;
+
+            if (handlePosition.includes('e')) newWidth = startWidth + deltaX;
+            if (handlePosition.includes('w')) newWidth = startWidth - deltaX;
+            if (handlePosition.includes('s')) newHeight = startHeight + deltaY;
+            if (handlePosition.includes('n')) newHeight = startHeight - deltaY;
+
+            newWidth = Math.max(30, newWidth);
+            newHeight = Math.max(30, newHeight);
+
+            if (handlePosition === 'se' || handlePosition === 'nw' || handlePosition === 'ne' || handlePosition === 'sw') {
+                newHeight = newWidth / aspectRatio;
+            }
+
+            img.style.width = `${newWidth}px`;
+            img.style.height = `${newHeight}px`;
+
+            if (resizeOverlay) {
+                resizeOverlay.style.width = `${newWidth}px`;
+                resizeOverlay.style.height = `${newHeight}px`;
+                resizeOverlay.style.top = `${img.offsetTop}px`;
+                resizeOverlay.style.left = `${img.offsetLeft}px`;
+            }
+        }
+
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }
+
     // Modal Tab Değişimi (Dosya Yükle / Özel Yol)
     const tabImgFile = document.getElementById('tab-img-file');
     const tabImgUrl = document.getElementById('tab-img-url');

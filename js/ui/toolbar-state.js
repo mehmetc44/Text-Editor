@@ -1,49 +1,31 @@
 /**
- * Meditör UI - Toolbar State Sync (Araç Çubuğu Durum Güncelleyici)
- * İmlecin bulunduğu konuma göre Bold, Italic, Hizalama vb. butonların aktifliğini (.active) günceller.
+ * Meditör - Araç Çubuğu Durum Senkronizasyonu (Toolbar State)
  */
 
-import { getSelectedNode } from '../core/selection.js';
-
 export function updateToolbarState(editor) {
-    if (!editor) return;
+    if (!editor || !document.activeElement || (!editor.contains(document.activeElement) && document.activeElement !== editor)) {
+        return;
+    }
 
-    // Native queryCommandState ile durum tespiti
-    const isBold = document.queryCommandState('bold');
-    const isItalic = document.queryCommandState('italic');
-    const isUnderline = document.queryCommandState('underline');
-    const isStrikethrough = document.queryCommandState('strikeThrough');
-
-    // Buton sınıflarını güncelle
-    toggleBtnState('btn-bold', isBold);
-    toggleBtnState('btn-italic', isItalic);
-    toggleBtnState('btn-underline', isUnderline);
-    toggleBtnState('btn-strikethrough', isStrikethrough);
-
-    // Hizalama tespiti
-    const isLeft = document.queryCommandState('justifyLeft');
-    const isCenter = document.queryCommandState('justifyCenter');
-    const isRight = document.queryCommandState('justifyRight');
-    const isJustify = document.queryCommandState('justifyFull');
-
-    toggleBtnState('btn-align-left', isLeft);
-    toggleBtnState('btn-align-center', isCenter);
-    toggleBtnState('btn-align-right', isRight);
-    toggleBtnState('btn-align-justify', isJustify);
-
-    // Liste tespiti
-    const isUl = document.queryCommandState('insertUnorderedList');
-    const isOl = document.queryCommandState('insertOrderedList');
-    toggleBtnState('btn-list-ul', isUl);
-    toggleBtnState('btn-list-ol', isOl);
+    try {
+        toggleBtnState('btn-bold', document.queryCommandState('bold'));
+        toggleBtnState('btn-italic', document.queryCommandState('italic'));
+        toggleBtnState('btn-underline', document.queryCommandState('underline'));
+        toggleBtnState('btn-strikethrough', document.queryCommandState('strikeThrough'));
+        toggleBtnState('btn-align-left', document.queryCommandState('justifyLeft'));
+        toggleBtnState('btn-align-center', document.queryCommandState('justifyCenter'));
+        toggleBtnState('btn-align-right', document.queryCommandState('justifyRight'));
+        toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
+        toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
+        toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
+    } catch (err) {
+        // Fallback
+    }
 }
 
-function toggleBtnState(btnId, isActive) {
+export function toggleBtnState(btnId, isActive) {
     const btn = document.getElementById(btnId);
-    if (!btn) return;
-    if (isActive) {
-        btn.classList.add('active');
-    } else {
-        btn.classList.remove('active');
+    if (btn) {
+        btn.classList.toggle('active', Boolean(isActive));
     }
 }

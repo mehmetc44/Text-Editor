@@ -1,25 +1,11 @@
 /**
- * Meditör - Tablo Yönetimi ve Sütun Boyutlandırma Modülü (Table Manager)
- * Tablo oluşturma, satır/sütun ekleme-silme ve canlı sütun boyutlandırmayı yönetir.
- * 
- * Mülakat Notu: HTML5 Table DOM API'leri (insertRow, insertCell, deleteRow, deleteCell) kullanılmıştır.
+ * Meditör - Tablo Yönetimi Modülü (Table Manager)
  */
 
-let selectedCell = null;
-
-/**
- * Belirtilen satır ve sütun sayısına göre editöre tablo ekler
- * @param {HTMLElement} editor 
- * @param {number} rows 
- * @param {number} cols 
- */
-export function createTable(editor, rows = 3, cols = 3) {
-    if (!editor) return;
-
+export function createTable(rows = 3, cols = 3) {
     const table = document.createElement('table');
     table.className = 'editor-table';
 
-    // Thead / Th Başlık satırı
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     for (let c = 0; c < cols; c++) {
@@ -30,7 +16,6 @@ export function createTable(editor, rows = 3, cols = 3) {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Tbody Hücreleri
     const tbody = document.createElement('tbody');
     for (let r = 0; r < rows - 1; r++) {
         const tr = document.createElement('tr');
@@ -42,159 +27,57 @@ export function createTable(editor, rows = 3, cols = 3) {
         tbody.appendChild(tr);
     }
     table.appendChild(tbody);
-
-    // Sütun resizer tutamaçlarını ekle
-    attachColumnResizers(table);
-
-    // Editöre ekle
-    editor.focus();
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-        range.insertNode(table);
-    } else {
-        editor.appendChild(table);
-    }
+    return table;
 }
 
-/**
- * Seçili hücreye göre üstüne satır ekler
- */
-export function insertRowAbove() {
-    if (!selectedCell) return;
-    const tr = selectedCell.closest('tr');
+export function addRowAbove(cell) {
+    if (!cell) return;
+    const tr = cell.closest('tr');
     if (!tr) return;
-
+    const colsCount = tr.children.length;
     const newTr = document.createElement('tr');
-    const cellCount = tr.children.length;
-    for (let i = 0; i < cellCount; i++) {
-        const td = document.createElement('td');
-        td.textContent = 'Yeni Satır';
-        newTr.appendChild(td);
+    const isHeader = tr.parentNode.tagName === 'THEAD';
+
+    for (let i = 0; i < colsCount; i++) {
+        const newCell = document.createElement(isHeader ? 'th' : 'td');
+        newCell.textContent = 'Yeni Hücre';
+        newTr.appendChild(newCell);
     }
+
     tr.parentNode.insertBefore(newTr, tr);
 }
 
-/**
- * Seçili hücreye göre altına satır ekler
- */
-export function insertRowBelow() {
-    if (!selectedCell) return;
-    const tr = selectedCell.closest('tr');
+export function addRowBelow(cell) {
+    if (!cell) return;
+    const tr = cell.closest('tr');
     if (!tr) return;
-
+    const colsCount = tr.children.length;
     const newTr = document.createElement('tr');
-    const cellCount = tr.children.length;
-    for (let i = 0; i < cellCount; i++) {
-        const td = document.createElement('td');
-        td.textContent = 'Yeni Satır';
-        newTr.appendChild(td);
+
+    for (let i = 0; i < colsCount; i++) {
+        const newCell = document.createElement('td');
+        newCell.textContent = 'Yeni Hücre';
+        newTr.appendChild(newCell);
     }
+
     tr.parentNode.insertBefore(newTr, tr.nextSibling);
 }
 
-/**
- * Seçili sütunun soluna sütun ekler
- */
-export function insertColLeft() {
-    if (!selectedCell) return;
-    const colIndex = selectedCell.cellIndex;
-    const table = selectedCell.closest('table');
+export function deleteRow(cell) {
+    if (!cell) return;
+    const tr = cell.closest('tr');
+    if (tr) tr.remove();
+}
+
+export function deleteColumn(cell) {
+    if (!cell) return;
+    const colIndex = cell.cellIndex;
+    const table = cell.closest('table');
     if (!table) return;
 
     Array.from(table.rows).forEach(row => {
-        const isHeader = row.parentNode.tagName === 'THEAD';
-        const cell = isHeader ? document.createElement('th') : document.createElement('td');
-        cell.textContent = isHeader ? 'Başlık' : 'Veri';
-        row.insertBefore(cell, row.children[colIndex]);
-    });
-}
-
-/**
- * Seçili sütunun sağına sütun ekler
- */
-export function insertColRight() {
-    if (!selectedCell) return;
-    const colIndex = selectedCell.cellIndex;
-    const table = selectedCell.closest('table');
-    if (!table) return;
-
-    Array.from(table.rows).forEach(row => {
-        const isHeader = row.parentNode.tagName === 'THEAD';
-        const cell = isHeader ? document.createElement('th') : document.createElement('td');
-        cell.textContent = isHeader ? 'Başlık' : 'Veri';
-        row.insertBefore(cell, row.children[colIndex + 1] || null);
-    });
-}
-
-/**
- * Seçili satırı siler
- */
-export function deleteRow() {
-    if (!selectedCell) return;
-    const tr = selectedCell.closest('tr');
-    if (tr) {
-        const table = tr.closest('table');
-        tr.remove();
-        if (table && table.rows.length === 0) {
-            table.remove();
-        }
-        selectedCell = null;
-    }
-}
-
-/**
- * Seçili sütunu siler
- */
-export function deleteCol() {
-    if (!selectedCell) return;
-    const colIndex = selectedCell.cellIndex;
-    const table = selectedCell.closest('table');
-    if (!table) return;
-
-    Array.from(table.rows).forEach(row => {
-        if (row.children[colIndex]) {
-            row.children[colIndex].remove();
+        if (row.cells[colIndex]) {
+            row.cells[colIndex].remove();
         }
     });
-
-    if (table.rows[0] && table.rows[0].children.length === 0) {
-        table.remove();
-    }
-    selectedCell = null;
-}
-
-/**
- * Tablonun tamamını siler
- */
-export function deleteTable() {
-    if (!selectedCell) return;
-    const table = selectedCell.closest('table');
-    if (table) {
-        table.remove();
-        selectedCell = null;
-    }
-}
-
-/**
- * Hücre seçimini ve tıklama durumunu günceller
- * @param {HTMLTableCellElement} cell 
- */
-export function setSelectedCell(cell) {
-    if (selectedCell) {
-        selectedCell.classList.remove('selected-cell');
-    }
-    selectedCell = cell;
-    if (selectedCell) {
-        selectedCell.classList.add('selected-cell');
-    }
-}
-
-/**
- * Tablo hücre kenarlıklarına sütun boyutlandırma tutamacı ekler
- * @param {HTMLTableElement} table 
- */
-function attachColumnResizers(table) {
-    // Sütun genişliği sürükleme mantığı
 }

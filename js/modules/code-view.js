@@ -1,40 +1,42 @@
 /**
- * Meditör - Dışa Aktarma ve HTML Kod Modu Yardımcısı (Code View & Export)
- * Belgeyi HTML dosyası olarak indirmeyi ve canlı önizlemeyi yönetir.
+ * Meditör - Kod Görünümü ve HTML İndirme Yardımcı Modülü (Code View & Export)
  */
 
-/**
- * Editör içeriğini bilgisayara .html dosyası olarak indirir
- * @param {string} htmlContent 
- * @param {string} filename 
- */
-export function exportAsHtmlFile(htmlContent, filename = 'belge.html') {
-    const fullHtml = `<!DOCTYPE html>
+export function getCleanExportHtml(editorElement) {
+    if (!editorElement) return '';
+    const clone = editorElement.cloneNode(true);
+
+    clone.querySelectorAll('.resize-handle-box').forEach(el => el.remove());
+    clone.querySelectorAll('.selected-image').forEach(el => el.classList.remove('selected-image'));
+    clone.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
+
+    clone.querySelectorAll('img[data-rel-src]').forEach(img => {
+        const relSrc = img.getAttribute('data-rel-src');
+        if (relSrc) img.setAttribute('src', relSrc);
+        img.removeAttribute('data-rel-src');
+    });
+
+    return clone.innerHTML;
+}
+
+export function downloadHtml(editorElement, filename = 'belge.html') {
+    const cleanHtml = getCleanExportHtml(editorElement);
+    const fullContent = `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meditör Belgesi</title>
-    <style>
-        body { font-family: sans-serif; line-height: 1.6; padding: 2rem; max-width: 800px; margin: 0 auto; color: #1e293b; }
-        img { max-width: 100%; height: auto; }
-        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-        th, td { border: 1px solid #cbd5e1; padding: 8px 12px; }
-        th { background-color: #f8fafc; }
-    </style>
+    <title>Meditör Dokümanı</title>
 </head>
 <body>
-${htmlContent}
+${cleanHtml}
 </body>
 </html>`;
 
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([fullContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
     URL.revokeObjectURL(url);
 }
