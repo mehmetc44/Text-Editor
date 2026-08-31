@@ -1,13 +1,10 @@
 /**
- * Meditör - LibreOffice Writer Masaüstü Şablonu İşleyicisi
+ * Meditör - Zengin Metin Editörü (LibreOffice Writer Masaüstü Sürümü)
+ * Pure Vanilla JS, HTML5 ve Tailwind CSS ile geliştirilmiştir.
+ * Dış framework / kütüphane bağımlılığı YOKTUR.
+ * 
+ * Hem file:// protokolünde (çift tıklama) hem de HTTP sunucularında %100 sorunsuz çalışır.
  */
-
-import * as TextFormat from './modules/text-formatting.js';
-import { updateToolbarState } from './ui/toolbar-state.js';
-import { handlePaste } from './core/word-sanitizer.js';
-import * as ImageManager from './modules/image-manager.js';
-import * as TableManager from './modules/table-manager.js';
-import { exportAsHtmlFile } from './modules/code-view.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elementleri
@@ -41,118 +38,318 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isHtmlMode = false;
     let isPreviewMode = false;
+    let selectedCell = null;
+    let activeImage = null;
+    let resizeOverlay = null;
 
-    // --- 1. Biçimlendirme Butonları Olay Dinleyicileri ---
-    document.getElementById('btn-bold')?.addEventListener('click', () => TextFormat.toggleBold());
-    document.getElementById('btn-italic')?.addEventListener('click', () => TextFormat.toggleItalic());
-    document.getElementById('btn-underline')?.addEventListener('click', () => TextFormat.toggleUnderline());
-    document.getElementById('btn-strikethrough')?.addEventListener('click', () => TextFormat.toggleStrikethrough());
+    // ==========================================
+    // 1. SELECTION & RANGE YARDIMCILARI
+    // ==========================================
 
-    document.getElementById('btn-align-left')?.addEventListener('click', () => TextFormat.setAlignment('left'));
-    document.getElementById('btn-align-center')?.addEventListener('click', () => TextFormat.setAlignment('center'));
-    document.getElementById('btn-align-right')?.addEventListener('click', () => TextFormat.setAlignment('right'));
-    document.getElementById('btn-align-justify')?.addEventListener('click', () => TextFormat.setAlignment('justify'));
+    function exec(command, value = null) {
+        document.execCommand(command, false, value);
+    }
 
-    document.getElementById('btn-list-ul')?.addEventListener('click', () => TextFormat.exec('insertUnorderedList'));
-    document.getElementById('btn-list-ol')?.addEventListener('click', () => TextFormat.exec('insertOrderedList'));
-    document.getElementById('btn-indent')?.addEventListener('click', () => TextFormat.exec('indent'));
-    document.getElementById('btn-outdent')?.addEventListener('click', () => TextFormat.exec('outdent'));
+    function applyInlineStyle(styleName, styleValue) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return;
 
-    document.getElementById('btn-clear-format')?.addEventListener('click', () => TextFormat.clearFormatting());
+        const span = document.createElement('span');
+        span.style[styleName] = styleValue;
+
+        try {
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+            selection.removeAllRanges();
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            selection.addRange(newRange);
+        } catch (e) {
+            console.warn('Style uygulama hatası:', e);
+        }
+    }
+
+    // ==========================================
+    // 2. WORD & HTML KOPYALA-YAPIŞTIR TEMİZLEYİCİ
+    // ==========================================
+
+    const ALLOWED_TAGS = new Set([
+        'P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE',
+        'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+        'UL', 'OL', 'LI', 'BLOCKQUOTE', 'PRE', 'CODE',
+        'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD',
+        'A', 'IMG', 'SPAN', 'DIV'
+    ]);
+
+    function sanitizeWordHtml(htmlContent) {
+        if (!htmlContent) return '';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        cleanNode(doc.body);
+        return doc.body.innerHTML;
+    }
+
+    function cleanNode(node) {
+        const children = Array.from(node.childNodes);
+        for (const child of children) {
+            if (child.nodeType === Node.COMMENT_NODE) {
+                child.remove();
+                continue;
+            }
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                const tagName = child.tagName.toUpperCase();
+                if (tagName.includes(':') || !ALLOWED_TAGS.has(tagName)) {
+                    if (child.hasChildNodes()) {
+                        while (child.firstChild) {
+                            node.insertBefore(child.firstChild, child);
+                        }
+                    }
+                    child.remove();
+                    continue;
+                }
+                if (child.hasAttribute('class')) {
+                    const className = child.getAttribute('class');
+                    if (className.includes('Mso') || className.includes('w:')) {
+                        child.removeAttribute('class');
+                    }
+                }
+                if (child.hasAttribute('style')) {
+                    let style = child.getAttribute('style');
+                    style = style.replace(/mso-[^;]+;?/gi, '');
+                    style = style.replace(/margin:[^;]+;?/gi, '');
+                    if (style.trim()) child.setAttribute('style', style.trim());
+                    else child.removeAttribute('style');
+                }
+                cleanNode(child);
+            }
+        }
+    }
+
+    if (editor) {
+        editor.addEventListener('paste', (e) => {
+            if (!e.clipboardData) return;
+            const html = e.clipboardData.getData('text/html');
+            const text = e.clipboardData.getData('text/plain');
+
+            if (html && html.trim().length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                const cleanHtml = sanitizeWordHtml(html);
+                document.execCommand('insertHTML', false, cleanHtml);
+                updateStats();
+            } else if (text && text.trim().length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                const paragraphs = text.split(/\r?\n/).map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+                document.execCommand('insertHTML', false, paragraphs || text);
+                updateStats();
+            }
+        });
+    }
+
+    // ==========================================
+    // 3. METİN BİÇİMLENDİRME & TOOLBAR EVENTS
+    // ==========================================
+
+    document.getElementById('btn-bold')?.addEventListener('click', () => exec('bold'));
+    document.getElementById('btn-italic')?.addEventListener('click', () => exec('italic'));
+    document.getElementById('btn-underline')?.addEventListener('click', () => exec('underline'));
+    document.getElementById('btn-strikethrough')?.addEventListener('click', () => exec('strikeThrough'));
+    document.getElementById('btn-undo')?.addEventListener('click', () => exec('undo'));
+    document.getElementById('btn-redo')?.addEventListener('click', () => exec('redo'));
+    document.getElementById('menu-edit-undo')?.addEventListener('click', () => exec('undo'));
+    document.getElementById('menu-edit-redo')?.addEventListener('click', () => exec('redo'));
+
+    document.getElementById('btn-align-left')?.addEventListener('click', () => exec('justifyLeft'));
+    document.getElementById('btn-align-center')?.addEventListener('click', () => exec('justifyCenter'));
+    document.getElementById('btn-align-right')?.addEventListener('click', () => exec('justifyRight'));
+    document.getElementById('btn-align-justify')?.addEventListener('click', () => exec('justifyFull'));
+
+    document.getElementById('btn-list-ul')?.addEventListener('click', () => exec('insertUnorderedList'));
+    document.getElementById('btn-list-ol')?.addEventListener('click', () => exec('insertOrderedList'));
+    document.getElementById('btn-indent')?.addEventListener('click', () => exec('indent'));
+    document.getElementById('btn-outdent')?.addEventListener('click', () => exec('outdent'));
+
+    document.getElementById('btn-clear-format')?.addEventListener('click', () => exec('removeFormat'));
 
     // Select Dropdown Dinleyicileri
-    document.getElementById('select-heading')?.addEventListener('change', (e) => TextFormat.setHeading(e.target.value));
-    document.getElementById('select-font-family')?.addEventListener('change', (e) => TextFormat.setFontFamily(e.target.value));
-    document.getElementById('select-font-size')?.addEventListener('change', (e) => TextFormat.setFontSize(e.target.value));
+    document.getElementById('select-heading')?.addEventListener('change', (e) => {
+        exec('formatBlock', `<${e.target.value}>`);
+    });
+
+    document.getElementById('select-font-family')?.addEventListener('change', (e) => {
+        applyInlineStyle('fontFamily', e.target.value);
+    });
+
+    document.getElementById('select-font-size')?.addEventListener('change', (e) => {
+        applyInlineStyle('fontSize', e.target.value);
+    });
 
     // Renk Paletleri
     document.querySelectorAll('#dropdown-text-color button[data-color]').forEach(btn => {
         btn.addEventListener('click', () => {
             const color = btn.getAttribute('data-color');
-            TextFormat.setTextColor(color);
-            document.getElementById('text-color-indicator').style.backgroundColor = color;
+            exec('foreColor', color);
+            const indicator = document.getElementById('text-color-indicator');
+            if (indicator) indicator.style.backgroundColor = color;
         });
     });
 
     document.querySelectorAll('#dropdown-bg-color button[data-bgcolor]').forEach(btn => {
         btn.addEventListener('click', () => {
             const color = btn.getAttribute('data-bgcolor');
-            TextFormat.setBackgroundColor(color);
-            document.getElementById('bg-color-indicator').style.backgroundColor = color === 'transparent' ? '#fef08a' : color;
+            try { exec('hiliteColor', color); } catch (err) { exec('backColor', color); }
+            const indicator = document.getElementById('bg-color-indicator');
+            if (indicator) indicator.style.backgroundColor = color === 'transparent' ? '#fef08a' : color;
         });
     });
 
     // Toolbar Aktiflik Senkronizasyonu
-    if (editor) {
-        document.addEventListener('selectionchange', () => updateToolbarState(editor));
-        editor.addEventListener('keyup', () => updateToolbarState(editor));
-        editor.addEventListener('mouseup', () => updateToolbarState(editor));
-        editor.addEventListener('paste', (e) => handlePaste(editor, e));
-    }
-
-    // --- 2. Tema Geçişi (Gece/Gündüz) ---
-    if (btnToggleTheme) {
-        btnToggleTheme.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-        });
-    }
-
-    // --- 3. Anlık Kelime & Karakter Sayacı ---
-    function updateStats() {
+    function updateToolbarState() {
         if (!editor) return;
-        const text = editor.innerText || editor.textContent || '';
-        const cleanText = text.trim();
-        
-        const charCount = cleanText ? cleanText.length : 0;
-        const wordCount = cleanText ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
+        toggleBtnState('btn-bold', document.queryCommandState('bold'));
+        toggleBtnState('btn-italic', document.queryCommandState('italic'));
+        toggleBtnState('btn-underline', document.queryCommandState('underline'));
+        toggleBtnState('btn-strikethrough', document.queryCommandState('strikeThrough'));
+        toggleBtnState('btn-align-left', document.queryCommandState('justifyLeft'));
+        toggleBtnState('btn-align-center', document.queryCommandState('justifyCenter'));
+        toggleBtnState('btn-align-right', document.queryCommandState('justifyRight'));
+        toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
+        toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
+        toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
+    }
 
-        if (statChars) statChars.textContent = charCount.toLocaleString();
-        if (statWords) statWords.textContent = wordCount.toLocaleString();
+    function toggleBtnState(btnId, isActive) {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            if (isActive) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
     }
 
     if (editor) {
-        editor.addEventListener('input', updateStats);
+        document.addEventListener('selectionchange', updateToolbarState);
+        editor.addEventListener('keyup', updateToolbarState);
+        editor.addEventListener('mouseup', updateToolbarState);
+    }
+
+    // ==========================================
+    // 4. RESİM YÖNETİMİ & CANLI RESIZER
+    // ==========================================
+
+    function insertImage(src, alt = '') {
+        if (!editor || !src) return;
+        editor.focus();
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = alt;
+        img.className = 'editor-image';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(img);
+        } else {
+            editor.appendChild(img);
+        }
+        selectImage(img);
         updateStats();
     }
 
-    // --- 4. Modallar & Açılır Pencereler ---
-    const openImageModal = () => modalImage && modalImage.classList.remove('hidden');
-    const openTableModal = () => modalTable && modalTable.classList.remove('hidden');
+    function selectImage(img) {
+        clearImageSelection();
+        activeImage = img;
+        img.classList.add('selected-image');
+        createResizeOverlay(img);
+    }
 
-    if (btnModalImage) btnModalImage.addEventListener('click', openImageModal);
-    if (menuInsertImage) menuInsertImage.addEventListener('click', openImageModal);
-    
-    if (btnModalTable) btnModalTable.addEventListener('click', openTableModal);
-    if (menuInsertTable) menuInsertTable.addEventListener('click', openTableModal);
-    if (menuTableAdd) menuTableAdd.addEventListener('click', openTableModal);
+    function clearImageSelection() {
+        if (activeImage) {
+            activeImage.classList.remove('selected-image');
+            activeImage = null;
+        }
+        if (resizeOverlay && resizeOverlay.parentNode) {
+            resizeOverlay.parentNode.removeChild(resizeOverlay);
+            resizeOverlay = null;
+        }
+    }
 
-    btnCloseModals.forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (modalImage) modalImage.classList.add('hidden');
-            if (modalTable) modalTable.classList.add('hidden');
+    function createResizeOverlay(img) {
+        resizeOverlay = document.createElement('div');
+        resizeOverlay.className = 'resize-handle-box';
+        resizeOverlay.style.top = `${img.offsetTop}px`;
+        resizeOverlay.style.left = `${img.offsetLeft}px`;
+        resizeOverlay.style.width = `${img.offsetWidth}px`;
+        resizeOverlay.style.height = `${img.offsetHeight}px`;
+
+        const positions = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
+        positions.forEach(pos => {
+            const dot = document.createElement('div');
+            dot.className = `resize-dot resize-${pos}`;
+            if (pos.includes('n')) dot.style.top = '-4px';
+            if (pos.includes('s')) dot.style.bottom = '-4px';
+            if (pos.includes('w')) dot.style.left = '-4px';
+            if (pos.includes('e')) dot.style.right = '-4px';
+            if (pos === 'n' || pos === 's') dot.style.left = 'calc(50% - 4px)';
+            if (pos === 'w' || pos === 'e') dot.style.top = 'calc(50% - 4px)';
+            dot.style.cursor = `${pos}-resize`;
+
+            dot.addEventListener('mousedown', (e) => startResizing(e, pos, img));
+            resizeOverlay.appendChild(dot);
         });
-    });
 
-    // Resim Modalı Sekmeleri (URL vs Dosya)
-    const tabUrl = document.getElementById('tab-img-url');
-    const tabFile = document.getElementById('tab-img-file');
-    const paneUrl = document.getElementById('pane-img-url');
-    const paneFile = document.getElementById('pane-img-file');
+        img.parentNode.insertBefore(resizeOverlay, img.nextSibling);
+    }
 
-    if (tabUrl && tabFile && paneUrl && paneFile) {
-        tabUrl.addEventListener('click', () => {
-            tabUrl.className = "px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400";
-            tabFile.className = "px-3 py-1.5 text-slate-500 hover:text-slate-700";
-            paneUrl.classList.remove('hidden');
-            paneFile.classList.add('hidden');
-        });
+    function startResizing(e, handlePosition, img) {
+        e.preventDefault();
+        e.stopPropagation();
 
-        tabFile.addEventListener('click', () => {
-            tabFile.className = "px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400";
-            tabUrl.className = "px-3 py-1.5 text-slate-500 hover:text-slate-700";
-            paneFile.classList.remove('hidden');
-            paneUrl.classList.add('hidden');
-        });
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startWidth = img.offsetWidth;
+        const startHeight = img.offsetHeight;
+        const aspectRatio = startWidth / startHeight;
+
+        function onMouseMove(moveEvent) {
+            const deltaX = moveEvent.clientX - startX;
+            const deltaY = moveEvent.clientY - startY;
+            let newWidth = startWidth;
+            let newHeight = startHeight;
+
+            if (handlePosition.includes('e')) newWidth = startWidth + deltaX;
+            if (handlePosition.includes('w')) newWidth = startWidth - deltaX;
+            if (handlePosition.includes('s')) newHeight = startHeight + deltaY;
+            if (handlePosition.includes('n')) newHeight = startHeight - deltaY;
+
+            newWidth = Math.max(30, newWidth);
+            newHeight = Math.max(30, newHeight);
+
+            if (handlePosition === 'se' || handlePosition === 'nw' || handlePosition === 'ne' || handlePosition === 'sw') {
+                newHeight = newWidth / aspectRatio;
+            }
+
+            img.style.width = `${newWidth}px`;
+            img.style.height = `${newHeight}px`;
+
+            if (resizeOverlay) {
+                resizeOverlay.style.width = `${newWidth}px`;
+                resizeOverlay.style.height = `${newHeight}px`;
+            }
+        }
+
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
     }
 
     // Resim Ekle Onayı
@@ -165,9 +362,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const altText = altInput ? altInput.value : '';
 
             if (fileInput && fileInput.files && fileInput.files[0]) {
-                ImageManager.insertImageFromFile(editor, fileInput.files[0], altText);
+                const objectUrl = URL.createObjectURL(fileInput.files[0]);
+                insertImage(objectUrl, altText);
             } else if (urlInput && urlInput.value.trim()) {
-                ImageManager.insertImage(editor, urlInput.value.trim(), altText);
+                insertImage(urlInput.value.trim(), altText);
             }
 
             if (modalImage) modalImage.classList.add('hidden');
@@ -178,19 +376,63 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editor) {
         editor.addEventListener('click', (e) => {
             if (e.target.tagName === 'IMG') {
-                ImageManager.selectImage(e.target, editor);
+                selectImage(e.target);
             } else if (!e.target.closest('.resize-handle-box')) {
-                ImageManager.clearImageSelection();
+                clearImageSelection();
             }
 
             const cell = e.target.closest('td, th');
             if (cell) {
-                TableManager.setSelectedCell(cell);
+                if (selectedCell) selectedCell.classList.remove('selected-cell');
+                selectedCell = cell;
+                selectedCell.classList.add('selected-cell');
             }
         });
     }
 
-    // Tablo Ekle Onayı
+    // ==========================================
+    // 5. TABLO YÖNETİMİ
+    // ==========================================
+
+    function createTable(rows = 3, cols = 3) {
+        if (!editor) return;
+        const table = document.createElement('table');
+        table.className = 'editor-table';
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        for (let c = 0; c < cols; c++) {
+            const th = document.createElement('th');
+            th.textContent = `Başlık ${c + 1}`;
+            headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        for (let r = 0; r < rows - 1; r++) {
+            const tr = document.createElement('tr');
+            for (let c = 0; c < cols; c++) {
+                const td = document.createElement('td');
+                td.textContent = `Veri ${r + 1}-${c + 1}`;
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+
+        editor.focus();
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(table);
+        } else {
+            editor.appendChild(table);
+        }
+        updateStats();
+    }
+
     const btnInsertTableConfirm = document.getElementById('btn-insert-table-confirm');
     if (btnInsertTableConfirm) {
         btnInsertTableConfirm.addEventListener('click', () => {
@@ -199,11 +441,55 @@ document.addEventListener('DOMContentLoaded', () => {
             const rows = rowsInput ? parseInt(rowsInput.value) || 3 : 3;
             const cols = colsInput ? parseInt(colsInput.value) || 3 : 3;
 
-            TableManager.createTable(editor, rows, cols);
-
+            createTable(rows, cols);
             if (modalTable) modalTable.classList.add('hidden');
         });
     }
+
+    // ==========================================
+    // 6. GENEL UYGULAMA VE DIŞA AKTARMA
+    // ==========================================
+
+    // Tema Geçişi (Gece/Gündüz)
+    if (btnToggleTheme) {
+        btnToggleTheme.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+    }
+
+    // Anlık Kelime & Karakter Sayacı
+    function updateStats() {
+        if (!editor) return;
+        const text = editor.innerText || editor.textContent || '';
+        const cleanText = text.trim();
+        const charCount = cleanText ? cleanText.length : 0;
+        const wordCount = cleanText ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
+
+        if (statChars) statChars.textContent = charCount.toLocaleString();
+        if (statWords) statWords.textContent = wordCount.toLocaleString();
+    }
+
+    if (editor) {
+        editor.addEventListener('input', updateStats);
+        updateStats();
+    }
+
+    // Modallar
+    const openImageModal = () => modalImage && modalImage.classList.remove('hidden');
+    const openTableModal = () => modalTable && modalTable.classList.remove('hidden');
+
+    if (btnModalImage) btnModalImage.addEventListener('click', openImageModal);
+    if (menuInsertImage) menuInsertImage.addEventListener('click', openImageModal);
+    if (btnModalTable) btnModalTable.addEventListener('click', openTableModal);
+    if (menuInsertTable) menuInsertTable.addEventListener('click', openTableModal);
+    if (menuTableAdd) menuTableAdd.addEventListener('click', openTableModal);
+
+    btnCloseModals.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (modalImage) modalImage.classList.add('hidden');
+            if (modalTable) modalTable.classList.add('hidden');
+        });
+    });
 
     // Color Pickers Toggles
     const btnTextColor = document.getElementById('btn-text-color');
@@ -232,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dropdownBgColor) dropdownBgColor.classList.add('hidden');
     });
 
-    // --- 5. HTML Kod Görünümü ve Önizleme ---
+    // HTML Kod Görünümü ve Önizleme
     if (btnToggleHtml && editor && htmlTextarea && htmlEditorContainer) {
         btnToggleHtml.addEventListener('click', () => {
             isHtmlMode = !isHtmlMode;
@@ -261,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 6. İçeriği Temizle / Yeni Belge ---
+    // Temizle & Yeni
     const clearContent = () => {
         if (confirm('Belge içeriği temizlenecek. Emin misiniz?')) {
             if (editor) editor.innerHTML = '';
@@ -276,7 +562,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Dışa Aktar (.html)
     document.getElementById('btn-export-file')?.addEventListener('click', () => {
-        if (editor) exportAsHtmlFile(editor.innerHTML, 'belge.html');
+        if (!editor) return;
+        const blob = new Blob([editor.innerHTML], { type: 'text/html;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'belge.html';
+        link.click();
     });
 
     // HTML Kopyala
@@ -287,5 +578,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    console.log("Meditör metin biçimlendirme ve dışa aktarma modülleri hazır.");
+    console.log("Meditör sorunsuz yüklendi ve tüm modüller aktif.");
 });
