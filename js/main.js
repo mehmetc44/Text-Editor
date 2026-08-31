@@ -4,6 +4,7 @@
 
 import * as TextFormat from './modules/text-formatting.js';
 import { updateToolbarState } from './ui/toolbar-state.js';
+import { handlePaste } from './core/word-sanitizer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elementleri
@@ -83,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('selectionchange', () => updateToolbarState(editor));
         editor.addEventListener('keyup', () => updateToolbarState(editor));
         editor.addEventListener('mouseup', () => updateToolbarState(editor));
+        editor.addEventListener('paste', (e) => handlePaste(editor, e));
     }
 
     // --- 2. Tema Geçişi (Gece/Gündüz) ---
