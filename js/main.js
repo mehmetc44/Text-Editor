@@ -7,6 +7,7 @@ import { updateToolbarState } from './ui/toolbar-state.js';
 import { handlePaste } from './core/word-sanitizer.js';
 import * as ImageManager from './modules/image-manager.js';
 import * as TableManager from './modules/table-manager.js';
+import { exportAsHtmlFile } from './modules/code-view.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elementleri
@@ -273,5 +274,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tbNew) tbNew.addEventListener('click', clearContent);
     if (menuFileNew) menuFileNew.addEventListener('click', clearContent);
 
-    console.log("Meditör metin biçimlendirme modülü aktif.");
+    // Dışa Aktar (.html)
+    document.getElementById('btn-export-file')?.addEventListener('click', () => {
+        if (editor) exportAsHtmlFile(editor.innerHTML, 'belge.html');
+    });
+
+    // HTML Kopyala
+    document.getElementById('btn-copy-html')?.addEventListener('click', () => {
+        if (editor) {
+            navigator.clipboard.writeText(editor.innerHTML);
+            alert('HTML kodu panoya kopyalandı!');
+        }
+    });
+
+    console.log("Meditör metin biçimlendirme ve dışa aktarma modülleri hazır.");
 });
