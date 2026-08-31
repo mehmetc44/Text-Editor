@@ -6,7 +6,7 @@
  * Hem file:// protokolünde (çift tıklama) hem de HTTP sunucularında %100 sorunsuz çalışır.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     // DOM Elementleri
     const editor = document.getElementById('editor');
     const htmlTextarea = document.getElementById('html-textarea');
@@ -369,9 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // CANLI 8-NOKTA GÖRSEL BOYUTLANDIRMA (IMAGE RESIZER)
-    let activeImage = null;
-    let resizeOverlay = null;
-
     function selectImage(img) {
         clearImageSelection();
         activeImage = img;
@@ -720,23 +717,142 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tbNew) tbNew.addEventListener('click', clearContent);
     if (menuFileNew) menuFileNew.addEventListener('click', clearContent);
 
-    // Dışa Aktar (.html)
-    document.getElementById('btn-export-file')?.addEventListener('click', () => {
+    // ==========================================
+    // 7. WORD/PDF İÇE & DIŞA AKTARMA VE REVİZYON GEÇMİŞİ
+    // ==========================================
+
+    const modalRevisions = document.getElementById('modal-revisions');
+    const revisionsList = document.getElementById('revisions-list');
+    let revisions = JSON.parse(localStorage.getItem('meditor_revisions') || '[]');
+
+    function saveRevision(title = '') {
         if (!editor) return;
-        const blob = new Blob([editor.innerHTML], { type: 'text/html;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'belge.html';
-        link.click();
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR');
+        const text = editor.innerText || '';
+        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+        
+        const newRev = {
+            id: Date.now(),
+            date: dateStr,
+            title: title || `Revizyon (${dateStr})`,
+            html: editor.innerHTML,
+            words: wordCount
+        };
+
+        revisions.unshift(newRev);
+        if (revisions.length > 25) revisions.pop(); // Max 25 revizyon tut
+        localStorage.setItem('meditor_revisions', JSON.stringify(revisions));
+        renderRevisions();
+        
+        const saveStatus = document.getElementById('save-status');
+        if (saveStatus) {
+            saveStatus.innerHTML = `<i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i>Revizyon Kaydedildi (${now.toLocaleTimeString('tr-TR')})`;
+        }
+    }
+
+    function renderRevisions() {
+        if (!revisionsList) return;
+        if (revisions.length === 0) {
+            revisionsList.innerHTML = `<div class="p-4 text-center text-slate-400 font-italic">Henüz kaydedilmiş bir revizyon bulunmuyor.</div>`;
+            return;
+        }
+
+        revisionsList.innerHTML = revisions.map(rev => `
+            <div class="p-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                <div>
+                    <div class="font-semibold text-slate-800 dark:text-slate-200">${rev.title}</div>
+                    <div class="text-[10px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                        <span><i class="fa-regular fa-clock mr-1"></i>${rev.date}</span>
+                        <span>•</span>
+                        <span>${rev.words} sözcük</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-restore-rev px-2 py-1 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 rounded text-[11px] font-medium" data-id="${rev.id}">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Geri Yükle
+                </button>
+            </div>
+        `).join('');
+
+        revisionsList.querySelectorAll('.btn-restore-rev').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const revId = parseInt(btn.getAttribute('data-id'));
+                const rev = revisions.find(r => r.id === revId);
+                if (rev && editor) {
+                    if (confirm(`'${rev.title}' revizyonuna geri dönülecek. Mevcut içerik değiştirilsin mi?`)) {
+                        editor.innerHTML = rev.html;
+                        updateStats();
+                        if (modalRevisions) modalRevisions.classList.add('hidden');
+                    }
+                }
+            });
+        });
+    }
+
+    // Menü Bağlantıları: Revizyonlar
+    document.getElementById('menu-save-revision')?.addEventListener('click', () => saveRevision());
+    document.getElementById('btn-modal-save-revision')?.addEventListener('click', () => saveRevision());
+
+    document.getElementById('menu-open-revisions')?.addEventListener('click', () => {
+        renderRevisions();
+        if (modalRevisions) modalRevisions.classList.remove('hidden');
     });
 
-    // HTML Kopyala
-    document.getElementById('btn-copy-html')?.addEventListener('click', () => {
-        if (editor) {
-            navigator.clipboard.writeText(editor.innerHTML);
-            alert('HTML kodu panoya kopyalandı!');
-        }
+    // Menü Bağlantıları: Word'den İçe Aktar (.docx/.doc/.html)
+    document.getElementById('input-import-word')?.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const content = evt.target.result;
+            if (editor) {
+                // HTML veya düz metin olarak yükle ve temizle
+                const cleanHtml = sanitizeWordHtml(content);
+                editor.innerHTML = cleanHtml || content;
+                updateStats();
+                saveRevision(`Word İçe Aktarım (${file.name})`);
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // Menü Bağlantıları: Word'e Dışa Aktar (.doc)
+    document.getElementById('menu-export-word')?.addEventListener('click', () => {
+        if (!editor) return;
+        const cleanHtml = getCleanExportHtml();
+        const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Belge</title></head><body>`;
+        const footer = "</body></html>";
+        const sourceHTML = header + cleanHtml + footer;
+
+        const blob = new Blob(['\ufeff' + sourceHTML], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'belge.doc';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // Menü Bağlantıları: PDF Olarak Dışa Aktar
+    document.getElementById('menu-export-pdf')?.addEventListener('click', () => {
+        window.print();
+    });
+
+    // Modal Kapatıcıları içine modalRevisions eklendi
+    btnCloseModals.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (modalImage) modalImage.classList.add('hidden');
+            if (modalTable) modalTable.classList.add('hidden');
+            if (modalRevisions) modalRevisions.classList.add('hidden');
+        });
     });
 
     console.log("Meditör sorunsuz yüklendi ve tüm modüller aktif.");
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

@@ -55,18 +55,65 @@
         <!-- Dosya Menu -->
         <div class="relative group">
             <div class="menu-bar-item">Dosya</div>
-            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
-                <button type="button" id="menu-file-new" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
-                    <span><i class="fa-regular fa-file mr-2"></i>Yeni Belge</span>
+            <div class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded-b-md py-1 w-56 z-50 text-slate-700 dark:text-slate-200">
+                <button type="button" id="menu-file-new" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center">
+                    <span><i class="fa-regular fa-file mr-2 text-slate-500"></i>Yeni Belge</span>
                     <span class="text-slate-400 text-[10px]">Ctrl+N</span>
                 </button>
-                <button type="button" id="btn-export-file" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
-                    <span><i class="fa-solid fa-download mr-2"></i>HTML Olarak Kaydet</span>
-                    <span class="text-slate-400 text-[10px]">Ctrl+S</span>
-                </button>
+
                 <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
-                <button type="button" id="menu-file-print" onclick="window.print()" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between">
-                    <span><i class="fa-solid fa-print mr-2"></i>Yazdır</span>
+
+                <!-- Word'den İçe Aktar -->
+                <label for="input-import-word" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer">
+                    <span><i class="fa-solid fa-file-arrow-up text-blue-600 mr-2"></i>Word'den İçe Aktar</span>
+                    <span class="text-slate-400 text-[10px]">.docx</span>
+                    <input type="file" id="input-import-word" accept=".docx,.doc,.html,.txt" class="hidden">
+                </label>
+
+                <!-- Word'e Dışa Aktar -->
+                <button type="button" id="menu-export-word" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center">
+                    <span><i class="fa-solid fa-file-word text-blue-600 mr-2"></i>Word'e Dışa Aktar</span>
+                    <span class="text-slate-400 text-[10px]">.doc</span>
+                </button>
+
+                <!-- PDF Olarak Dışa Aktar -->
+                <button type="button" id="menu-export-pdf" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center">
+                    <span><i class="fa-solid fa-file-pdf text-rose-600 mr-2"></i>PDF Olarak Dışa Aktar</span>
+                    <span class="text-slate-400 text-[10px]">.pdf</span>
+                </button>
+
+                <!-- HTML Olarak Kaydet -->
+                <button type="button" id="btn-export-file" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center">
+                    <span><i class="fa-solid fa-code text-emerald-600 mr-2"></i>HTML Olarak Dışa Aktar</span>
+                    <span class="text-slate-400 text-[10px]">.html</span>
+                </button>
+
+                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+
+                <!-- Revizyon Geçmişi (Hover ile Açılan Alt Menü) -->
+                <div class="relative group/rev">
+                    <div class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer">
+                        <span><i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i>Revizyon Geçmişi</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                    </div>
+
+                    <!-- Alt Menü -->
+                    <div class="hidden group-hover/rev:block absolute left-full top-0 ml-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded-md py-1 w-52 z-50 text-slate-700 dark:text-slate-200">
+                        <button type="button" id="menu-save-revision" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                            <i class="fa-solid fa-bookmark text-emerald-500 mr-2"></i>
+                            <span>Mevcut Revizyonu Kaydet</span>
+                        </button>
+                        <button type="button" id="menu-open-revisions" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                            <i class="fa-solid fa-list-check text-blue-500 mr-2"></i>
+                            <span>Revizyon Geçmişini Aç</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+
+                <button type="button" id="menu-file-print" onclick="window.print()" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center">
+                    <span><i class="fa-solid fa-print mr-2 text-slate-500"></i>Yazdır</span>
                     <span class="text-slate-400 text-[10px]">Ctrl+P</span>
                 </button>
             </div>
@@ -401,6 +448,28 @@
             <div class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-end space-x-2">
                 <button type="button" class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800">İptal</button>
                 <button type="button" id="btn-insert-table-confirm" class="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium">Tablo Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revision History Modal -->
+    <div id="modal-revisions" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-md shadow-2xl border border-slate-300 dark:border-slate-700 max-w-md w-full overflow-hidden text-xs">
+            <div class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                <span><i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i>Revizyon Geçmişi</span>
+                <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <p class="text-slate-500 dark:text-slate-400">Kaydedilen belge versiyonları aşağıda listelenmiştir. İstediğiniz an herhangi bir revizyona geri dönebilirsiniz.</p>
+                <div id="revisions-list" class="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded divide-y divide-slate-200 dark:divide-slate-700">
+                    <!-- Dinamik Revizyonlar -->
+                </div>
+            </div>
+            <div class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-between items-center">
+                <button type="button" id="btn-modal-save-revision" class="px-3 py-1.5 rounded bg-amber-500 hover:bg-amber-600 text-white font-medium">
+                    <i class="fa-solid fa-plus mr-1"></i>Yeni Revizyon Kaydet
+                </button>
+                <button type="button" class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800">Kapat</button>
             </div>
         </div>
     </div>
