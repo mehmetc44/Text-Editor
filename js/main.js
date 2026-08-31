@@ -2,6 +2,9 @@
  * Meditör - LibreOffice Writer Masaüstü Şablonu İşleyicisi
  */
 
+import * as TextFormat from './modules/text-formatting.js';
+import { updateToolbarState } from './ui/toolbar-state.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elementleri
     const editor = document.getElementById('editor');
@@ -35,14 +38,61 @@ document.addEventListener('DOMContentLoaded', () => {
     let isHtmlMode = false;
     let isPreviewMode = false;
 
-    // --- 1. Tema Geçişi (Gece/Gündüz) ---
+    // --- 1. Biçimlendirme Butonları Olay Dinleyicileri ---
+    document.getElementById('btn-bold')?.addEventListener('click', () => TextFormat.toggleBold());
+    document.getElementById('btn-italic')?.addEventListener('click', () => TextFormat.toggleItalic());
+    document.getElementById('btn-underline')?.addEventListener('click', () => TextFormat.toggleUnderline());
+    document.getElementById('btn-strikethrough')?.addEventListener('click', () => TextFormat.toggleStrikethrough());
+
+    document.getElementById('btn-align-left')?.addEventListener('click', () => TextFormat.setAlignment('left'));
+    document.getElementById('btn-align-center')?.addEventListener('click', () => TextFormat.setAlignment('center'));
+    document.getElementById('btn-align-right')?.addEventListener('click', () => TextFormat.setAlignment('right'));
+    document.getElementById('btn-align-justify')?.addEventListener('click', () => TextFormat.setAlignment('justify'));
+
+    document.getElementById('btn-list-ul')?.addEventListener('click', () => TextFormat.exec('insertUnorderedList'));
+    document.getElementById('btn-list-ol')?.addEventListener('click', () => TextFormat.exec('insertOrderedList'));
+    document.getElementById('btn-indent')?.addEventListener('click', () => TextFormat.exec('indent'));
+    document.getElementById('btn-outdent')?.addEventListener('click', () => TextFormat.exec('outdent'));
+
+    document.getElementById('btn-clear-format')?.addEventListener('click', () => TextFormat.clearFormatting());
+
+    // Select Dropdown Dinleyicileri
+    document.getElementById('select-heading')?.addEventListener('change', (e) => TextFormat.setHeading(e.target.value));
+    document.getElementById('select-font-family')?.addEventListener('change', (e) => TextFormat.setFontFamily(e.target.value));
+    document.getElementById('select-font-size')?.addEventListener('change', (e) => TextFormat.setFontSize(e.target.value));
+
+    // Renk Paletleri
+    document.querySelectorAll('#dropdown-text-color button[data-color]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.getAttribute('data-color');
+            TextFormat.setTextColor(color);
+            document.getElementById('text-color-indicator').style.backgroundColor = color;
+        });
+    });
+
+    document.querySelectorAll('#dropdown-bg-color button[data-bgcolor]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.getAttribute('data-bgcolor');
+            TextFormat.setBackgroundColor(color);
+            document.getElementById('bg-color-indicator').style.backgroundColor = color === 'transparent' ? '#fef08a' : color;
+        });
+    });
+
+    // Toolbar Aktiflik Senkronizasyonu
+    if (editor) {
+        document.addEventListener('selectionchange', () => updateToolbarState(editor));
+        editor.addEventListener('keyup', () => updateToolbarState(editor));
+        editor.addEventListener('mouseup', () => updateToolbarState(editor));
+    }
+
+    // --- 2. Tema Geçişi (Gece/Gündüz) ---
     if (btnToggleTheme) {
         btnToggleTheme.addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
         });
     }
 
-    // --- 2. Anlık Kelime & Karakter Sayacı ---
+    // --- 3. Anlık Kelime & Karakter Sayacı ---
     function updateStats() {
         if (!editor) return;
         const text = editor.innerText || editor.textContent || '';
@@ -60,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStats();
     }
 
-    // --- 3. Modallar & Açılır Pencereler ---
+    // --- 4. Modallar & Açılır Pencereler ---
     const openImageModal = () => modalImage && modalImage.classList.remove('hidden');
     const openTableModal = () => modalTable && modalTable.classList.remove('hidden');
 
@@ -127,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dropdownBgColor) dropdownBgColor.classList.add('hidden');
     });
 
-    // --- 4. HTML Kod Görünümü ve Önizleme ---
+    // --- 5. HTML Kod Görünümü ve Önizleme ---
     if (btnToggleHtml && editor && htmlTextarea && htmlEditorContainer) {
         btnToggleHtml.addEventListener('click', () => {
             isHtmlMode = !isHtmlMode;
@@ -156,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 5. İçeriği Temizle / Yeni Belge ---
+    // --- 6. İçeriği Temizle / Yeni Belge ---
     const clearContent = () => {
         if (confirm('Belge içeriği temizlenecek. Emin misiniz?')) {
             if (editor) editor.innerHTML = '';
@@ -169,5 +219,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tbNew) tbNew.addEventListener('click', clearContent);
     if (menuFileNew) menuFileNew.addEventListener('click', clearContent);
 
-    console.log("LibreOffice Writer masaüstü arayüzü hazır.");
+    console.log("Meditör metin biçimlendirme modülü aktif.");
 });
