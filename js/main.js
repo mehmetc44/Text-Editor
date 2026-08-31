@@ -5,6 +5,7 @@
 import * as TextFormat from './modules/text-formatting.js';
 import { updateToolbarState } from './ui/toolbar-state.js';
 import { handlePaste } from './core/word-sanitizer.js';
+import * as ImageManager from './modules/image-manager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elementleri
@@ -149,6 +150,36 @@ document.addEventListener('DOMContentLoaded', () => {
             tabUrl.className = "px-3 py-1.5 text-slate-500 hover:text-slate-700";
             paneFile.classList.remove('hidden');
             paneUrl.classList.add('hidden');
+        });
+    }
+
+    // Resim Ekle Onayı
+    const btnInsertImageConfirm = document.getElementById('btn-insert-image-confirm');
+    if (btnInsertImageConfirm) {
+        btnInsertImageConfirm.addEventListener('click', () => {
+            const urlInput = document.getElementById('input-img-url');
+            const fileInput = document.getElementById('input-img-file');
+            const altInput = document.getElementById('input-img-alt');
+            const altText = altInput ? altInput.value : '';
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                ImageManager.insertImageFromFile(editor, fileInput.files[0], altText);
+            } else if (urlInput && urlInput.value.trim()) {
+                ImageManager.insertImage(editor, urlInput.value.trim(), altText);
+            }
+
+            if (modalImage) modalImage.classList.add('hidden');
+        });
+    }
+
+    // Editör İçi Tıklamalarda Resim Seçimi
+    if (editor) {
+        editor.addEventListener('click', (e) => {
+            if (e.target.tagName === 'IMG') {
+                ImageManager.selectImage(e.target, editor);
+            } else if (!e.target.closest('.resize-handle-box')) {
+                ImageManager.clearImageSelection();
+            }
         });
     }
 
