@@ -213,13 +213,22 @@
                 <i class="fa-solid fa-font text-slate-800 dark:text-slate-200"></i>
                 <div id="text-color-indicator" class="w-2.5 h-1 bg-red-600 rounded-full"></div>
             </button>
-            <div id="dropdown-text-color" class="hidden absolute left-0 top-full mt-1 p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded z-50 grid grid-cols-5 gap-1">
-                <button type="button" class="w-5 h-5 rounded bg-slate-900" data-color="#0f172a"></button>
-                <button type="button" class="w-5 h-5 rounded bg-red-600" data-color="#dc2626"></button>
-                <button type="button" class="w-5 h-5 rounded bg-amber-500" data-color="#f59e0b"></button>
-                <button type="button" class="w-5 h-5 rounded bg-emerald-600" data-color="#059669"></button>
-                <button type="button" class="w-5 h-5 rounded bg-blue-600" data-color="#2563eb"></button>
-                <button type="button" class="w-5 h-5 rounded bg-purple-600" data-color="#9333ea"></button>
+            <div id="dropdown-text-color" class="hidden absolute left-0 top-full mt-1.5 p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md z-50 w-36">
+                <div class="text-[10px] font-semibold text-slate-400 mb-1">YAZI RENKLERİ</div>
+                <div class="grid grid-cols-4 gap-1.5 mb-2">
+                    <button type="button" class="color-swatch bg-slate-900" data-color="#0f172a" title="Siyah"></button>
+                    <button type="button" class="color-swatch bg-red-600" data-color="#dc2626" title="Kırmızı"></button>
+                    <button type="button" class="color-swatch bg-amber-500" data-color="#f59e0b" title="Turuncu"></button>
+                    <button type="button" class="color-swatch bg-emerald-600" data-color="#059669" title="Yeşil"></button>
+                    <button type="button" class="color-swatch bg-blue-600" data-color="#2563eb" title="Mavi"></button>
+                    <button type="button" class="color-swatch bg-purple-600" data-color="#9333ea" title="Mor"></button>
+                    <button type="button" class="color-swatch bg-pink-600" data-color="#db2777" title="Pembe"></button>
+                    <button type="button" class="color-swatch bg-slate-500" data-color="#64748b" title="Gri"></button>
+                </div>
+                <label class="flex items-center space-x-1 text-[10px] text-slate-500 cursor-pointer pt-1 border-t border-slate-200 dark:border-slate-700">
+                    <span>Özel Renk:</span>
+                    <input type="color" id="input-custom-text-color" value="#dc2626" class="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent">
+                </label>
             </div>
         </div>
 
@@ -228,12 +237,21 @@
                 <i class="fa-solid fa-highlighter text-slate-800 dark:text-slate-200"></i>
                 <div id="bg-color-indicator" class="w-2.5 h-1 bg-yellow-300 rounded-full"></div>
             </button>
-            <div id="dropdown-bg-color" class="hidden absolute left-0 top-full mt-1 p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded z-50 grid grid-cols-5 gap-1">
-                <button type="button" class="w-5 h-5 rounded bg-yellow-200" data-bgcolor="#fef08a"></button>
-                <button type="button" class="w-5 h-5 rounded bg-emerald-200" data-bgcolor="#a7f3d0"></button>
-                <button type="button" class="w-5 h-5 rounded bg-sky-200" data-bgcolor="#bae6fd"></button>
-                <button type="button" class="w-5 h-5 rounded bg-pink-200" data-bgcolor="#fbcfe8"></button>
-                <button type="button" class="w-5 h-5 rounded bg-transparent border" data-bgcolor="transparent"></button>
+            <div id="dropdown-bg-color" class="hidden absolute left-0 top-full mt-1.5 p-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md z-50 w-36">
+                <div class="text-[10px] font-semibold text-slate-400 mb-1">VURGU RENKLERİ</div>
+                <div class="grid grid-cols-4 gap-1.5 mb-2">
+                    <button type="button" class="color-swatch bg-yellow-200" data-bgcolor="#fef08a" title="Sarı"></button>
+                    <button type="button" class="color-swatch bg-emerald-200" data-bgcolor="#a7f3d0" title="Yeşil"></button>
+                    <button type="button" class="color-swatch bg-sky-200" data-bgcolor="#bae6fd" title="Mavi"></button>
+                    <button type="button" class="color-swatch bg-pink-200" data-bgcolor="#fbcfe8" title="Pembe"></button>
+                    <button type="button" class="color-swatch bg-purple-200" data-bgcolor="#e9d5ff" title="Mor"></button>
+                    <button type="button" class="color-swatch bg-orange-200" data-bgcolor="#fed7aa" title="Turuncu"></button>
+                    <button type="button" class="color-swatch bg-transparent border border-slate-400" data-bgcolor="transparent" title="Temizle"></button>
+                </div>
+                <label class="flex items-center space-x-1 text-[10px] text-slate-500 cursor-pointer pt-1 border-t border-slate-200 dark:border-slate-700">
+                    <span>Özel Vurgu:</span>
+                    <input type="color" id="input-custom-bg-color" value="#fef08a" class="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent">
+                </label>
             </div>
         </div>
 

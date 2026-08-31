@@ -190,72 +190,135 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. METİN BİÇİMLENDİRME & TOOLBAR EVENTS
     // ==========================================
 
-    document.getElementById('btn-bold')?.addEventListener('click', () => exec('bold'));
-    document.getElementById('btn-italic')?.addEventListener('click', () => exec('italic'));
-    document.getElementById('btn-underline')?.addEventListener('click', () => exec('underline'));
-    document.getElementById('btn-strikethrough')?.addEventListener('click', () => exec('strikeThrough'));
-    document.getElementById('btn-undo')?.addEventListener('click', () => exec('undo'));
-    document.getElementById('btn-redo')?.addEventListener('click', () => exec('redo'));
-    document.getElementById('menu-edit-undo')?.addEventListener('click', () => exec('undo'));
-    document.getElementById('menu-edit-redo')?.addEventListener('click', () => exec('redo'));
+    // Buton tıklamalarında odağı editörde tut ve komut çalıştır
+    const bindToolbarBtn = (id, command, value = null) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            editor.focus();
+            exec(command, value);
+            updateToolbarState();
+            updateStats();
+        });
+    };
 
-    document.getElementById('btn-align-left')?.addEventListener('click', () => exec('justifyLeft'));
-    document.getElementById('btn-align-center')?.addEventListener('click', () => exec('justifyCenter'));
-    document.getElementById('btn-align-right')?.addEventListener('click', () => exec('justifyRight'));
-    document.getElementById('btn-align-justify')?.addEventListener('click', () => exec('justifyFull'));
+    bindToolbarBtn('btn-bold', 'bold');
+    bindToolbarBtn('btn-italic', 'italic');
+    bindToolbarBtn('btn-underline', 'underline');
+    bindToolbarBtn('btn-strikethrough', 'strikeThrough');
+    bindToolbarBtn('btn-undo', 'undo');
+    bindToolbarBtn('btn-redo', 'redo');
+    bindToolbarBtn('menu-edit-undo', 'undo');
+    bindToolbarBtn('menu-edit-redo', 'redo');
 
-    document.getElementById('btn-list-ul')?.addEventListener('click', () => exec('insertUnorderedList'));
-    document.getElementById('btn-list-ol')?.addEventListener('click', () => exec('insertOrderedList'));
-    document.getElementById('btn-indent')?.addEventListener('click', () => exec('indent'));
-    document.getElementById('btn-outdent')?.addEventListener('click', () => exec('outdent'));
+    bindToolbarBtn('btn-align-left', 'justifyLeft');
+    bindToolbarBtn('btn-align-center', 'justifyCenter');
+    bindToolbarBtn('btn-align-right', 'justifyRight');
+    bindToolbarBtn('btn-align-justify', 'justifyFull');
 
-    document.getElementById('btn-clear-format')?.addEventListener('click', () => exec('removeFormat'));
+    // BUG FIX: Madde İşaretli & Numaralı Liste Butonları
+    bindToolbarBtn('btn-list-ul', 'insertUnorderedList');
+    bindToolbarBtn('btn-list-ol', 'insertOrderedList');
+    bindToolbarBtn('btn-indent', 'indent');
+    bindToolbarBtn('btn-outdent', 'outdent');
 
-    // Select Dropdown Dinleyicileri
+    bindToolbarBtn('btn-clear-format', 'removeFormat');
+
+    // BUG FIX: Kod Bloğu ve Başlık Seçimi
     document.getElementById('select-heading')?.addEventListener('change', (e) => {
-        exec('formatBlock', `<${e.target.value}>`);
+        editor.focus();
+        const val = e.target.value;
+        if (val === 'pre') {
+            // Tüm sayfayı pre yapmasını engelle: Sadece seçili metni pre/code olarak sarmala
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const selectedText = range.toString() || 'Kod buraya...';
+                const pre = document.createElement('pre');
+                const code = document.createElement('code');
+                code.textContent = selectedText;
+                pre.appendChild(code);
+                range.deleteContents();
+                range.insertNode(pre);
+            }
+        } else {
+            exec('formatBlock', `<${val}>`);
+        }
+        updateStats();
     });
 
     document.getElementById('select-font-family')?.addEventListener('change', (e) => {
+        editor.focus();
         applyInlineStyle('fontFamily', e.target.value);
     });
 
     document.getElementById('select-font-size')?.addEventListener('change', (e) => {
+        editor.focus();
         applyInlineStyle('fontSize', e.target.value);
     });
 
-    // Renk Paletleri
+    // BUG FIX: Renk Paletleri & Özel Renk Seçiciler
     document.querySelectorAll('#dropdown-text-color button[data-color]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            editor.focus();
             const color = btn.getAttribute('data-color');
             exec('foreColor', color);
             const indicator = document.getElementById('text-color-indicator');
             if (indicator) indicator.style.backgroundColor = color;
+            document.getElementById('dropdown-text-color')?.classList.add('hidden');
         });
     });
 
+    document.getElementById('input-custom-text-color')?.addEventListener('input', (e) => {
+        editor.focus();
+        const color = e.target.value;
+        exec('foreColor', color);
+        const indicator = document.getElementById('text-color-indicator');
+        if (indicator) indicator.style.backgroundColor = color;
+    });
+
     document.querySelectorAll('#dropdown-bg-color button[data-bgcolor]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            editor.focus();
             const color = btn.getAttribute('data-bgcolor');
             try { exec('hiliteColor', color); } catch (err) { exec('backColor', color); }
             const indicator = document.getElementById('bg-color-indicator');
             if (indicator) indicator.style.backgroundColor = color === 'transparent' ? '#fef08a' : color;
+            document.getElementById('dropdown-bg-color')?.classList.add('hidden');
         });
     });
 
-    // Toolbar Aktiflik Senkronizasyonu
+    document.getElementById('input-custom-bg-color')?.addEventListener('input', (e) => {
+        editor.focus();
+        const color = e.target.value;
+        try { exec('hiliteColor', color); } catch (err) { exec('backColor', color); }
+        const indicator = document.getElementById('bg-color-indicator');
+        if (indicator) indicator.style.backgroundColor = color;
+    });
+
+    // BUG FIX: Toolbar Aktiflik Senkronizasyonu
     function updateToolbarState() {
-        if (!editor) return;
-        toggleBtnState('btn-bold', document.queryCommandState('bold'));
-        toggleBtnState('btn-italic', document.queryCommandState('italic'));
-        toggleBtnState('btn-underline', document.queryCommandState('underline'));
-        toggleBtnState('btn-strikethrough', document.queryCommandState('strikeThrough'));
-        toggleBtnState('btn-align-left', document.queryCommandState('justifyLeft'));
-        toggleBtnState('btn-align-center', document.queryCommandState('justifyCenter'));
-        toggleBtnState('btn-align-right', document.queryCommandState('justifyRight'));
-        toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
-        toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
-        toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
+        if (!editor || !document.activeElement || !editor.contains(document.activeElement) && document.activeElement !== editor) {
+            // İmleç editör dışındaysa veya seçim yoksa durum değiştirme
+        }
+        
+        try {
+            toggleBtnState('btn-bold', document.queryCommandState('bold'));
+            toggleBtnState('btn-italic', document.queryCommandState('italic'));
+            toggleBtnState('btn-underline', document.queryCommandState('underline'));
+            toggleBtnState('btn-strikethrough', document.queryCommandState('strikeThrough'));
+            toggleBtnState('btn-align-left', document.queryCommandState('justifyLeft'));
+            toggleBtnState('btn-align-center', document.queryCommandState('justifyCenter'));
+            toggleBtnState('btn-align-right', document.queryCommandState('justifyRight'));
+            toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
+            toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
+            toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
+        } catch (err) {
+            // Safe fallback
+        }
     }
 
     function toggleBtnState(btnId, isActive) {

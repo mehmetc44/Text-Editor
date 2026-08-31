@@ -6,20 +6,22 @@ body {
     user-select: none;
 }
 
-/* Compact Desktop Toolbar Buttons */
+/* Compact Desktop Toolbar Buttons - Fixed Box Sizing to Prevent Shifting */
 .desktop-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 26px;
-    min-width: 26px;
-    padding: 0 5px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0 6px;
     border-radius: 3px;
     color: #334155;
     font-size: 12px;
     border: 1px solid transparent;
+    box-sizing: border-box;
     transition: background-color 0.1s ease, border-color 0.1s ease;
     cursor: pointer;
+    user-select: none;
 }
 
 .dark .desktop-btn {
@@ -36,20 +38,23 @@ body {
     border-color: #475569;
 }
 
+/* Selected Active State - Fixed Width & No Shifting */
 .desktop-btn.active {
-    background-color: #dbeafe;
-    border-color: #93c5fd;
-    color: #1d4ed8;
+    background-color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+    color: #1d4ed8 !important;
+    font-weight: 600;
 }
 
 .dark .desktop-btn.active {
-    background-color: #1e3a8a;
-    border-color: #3b82f6;
-    color: #93c5fd;
+    background-color: #1e3a8a !important;
+    border-color: #3b82f6 !important;
+    color: #93c5fd !important;
+    font-weight: 600;
 }
 
 .desktop-select {
-    height: 26px;
+    height: 28px;
     font-size: 12px;
     padding: 0 6px;
     border-radius: 3px;
@@ -58,6 +63,7 @@ body {
     color: #1e293b;
     outline: none;
     cursor: pointer;
+    box-sizing: border-box;
 }
 
 .dark .desktop-select {
@@ -108,24 +114,13 @@ body {
     color: #94a3b8;
 }
 
-.ruler-tick {
-    position: absolute;
-    bottom: 0;
-    width: 1px;
-    background-color: #cbd5e1;
-}
-
-.dark .ruler-tick {
-    background-color: #475569;
-}
-
 /* A4 Document Paper Layout */
 #editor-page {
-    width: 816px; /* Standard A4 width in 96 DPI */
-    min-height: 1056px; /* Standard A4 height */
+    width: 816px;
+    min-height: 1056px;
     background-color: #ffffff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    padding: 72px; /* 0.75 in / 1.9 cm margin */
+    padding: 64px 72px;
     margin: 20px auto;
     position: relative;
     user-select: text;
@@ -157,6 +152,68 @@ body {
     font-style: italic;
 }
 
+/* BUG FIX: Explicit List Styles Override for Tailwind CSS Reset */
+#editor ul {
+    list-style-type: disc !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-left: 2rem !important;
+}
+
+#editor ol {
+    list-style-type: decimal !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-left: 2rem !important;
+}
+
+#editor li {
+    margin-bottom: 0.25rem !important;
+    display: list-item !important;
+}
+
+/* BUG FIX: Code Block Formatting inside Editor */
+#editor pre {
+    background-color: #0f172a !important;
+    color: #34d399 !important;
+    padding: 12px 16px !important;
+    border-radius: 6px !important;
+    font-family: 'Fira Code', monospace !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    margin: 12px 0 !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+}
+
+#editor blockquote {
+    border-left: 4px solid #3b82f6 !important;
+    padding-left: 12px !important;
+    margin: 12px 0 !important;
+    color: #475569 !important;
+    font-style: italic !important;
+}
+
+.dark #editor blockquote {
+    color: #94a3b8 !important;
+}
+
+/* BUG FIX: Clean Color Swatches in Color Picker Dropdown */
+.color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    box-sizing: border-box;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+    z-index: 10;
+}
+
 /* Image Selection & Resizer */
 .editor-image {
     max-width: 100%;
@@ -186,7 +243,7 @@ body {
     pointer-events: auto;
 }
 
-/* Table Styling (LibreOffice Table Defaults) */
+/* Table Styling */
 .editor-table {
     border-collapse: collapse;
     width: 100%;
