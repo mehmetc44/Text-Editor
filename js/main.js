@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 2. WORD & HTML KOPYALA-YAPIŞTIR TEMİZLEYİCİ
+    // 2. WORD & HTML KOPYALA-YAPIŞTIR TEMİZLEYİCİ & FORMAT KORUYUCU
     // ==========================================
 
     const ALLOWED_TAGS = new Set([
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
         'UL', 'OL', 'LI', 'BLOCKQUOTE', 'PRE', 'CODE',
         'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD',
-        'A', 'IMG', 'SPAN', 'DIV'
+        'A', 'IMG', 'SPAN', 'DIV', 'SUB', 'SUP'
     ]);
 
     function sanitizeWordHtml(htmlContent) {
@@ -100,6 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (child.nodeType === Node.ELEMENT_NODE) {
                 const tagName = child.tagName.toUpperCase();
+                
+                // MS Word özel XML etiketlerini (<o:p>, <v:shape>) temizle ama içeriğini koru
                 if (tagName.includes(':') || !ALLOWED_TAGS.has(tagName)) {
                     if (child.hasChildNodes()) {
                         while (child.firstChild) {
@@ -109,19 +111,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     child.remove();
                     continue;
                 }
+
+                // Word CSS sınıflarını (MsoNormal, MsoListParagraph) temizle
                 if (child.hasAttribute('class')) {
                     const className = child.getAttribute('class');
                     if (className.includes('Mso') || className.includes('w:')) {
                         child.removeAttribute('class');
                     }
                 }
+
+                // Inline stillerdeki mso-* çöplerini temizle ama font, renk, kalınlık formatını koru
                 if (child.hasAttribute('style')) {
                     let style = child.getAttribute('style');
+                    
+                    // Word vurgu rengi tespiti (mso-highlight -> background-color)
+                    const highlightMatch = style.match(/mso-highlight:\s*([^;]+)/i);
+                    let highlightColor = highlightMatch ? highlightMatch[1].trim() : null;
+
                     style = style.replace(/mso-[^;]+;?/gi, '');
                     style = style.replace(/margin:[^;]+;?/gi, '');
+
+                    if (highlightColor) {
+                        style += `; background-color: ${highlightColor};`;
+                    }
+
                     if (style.trim()) child.setAttribute('style', style.trim());
                     else child.removeAttribute('style');
                 }
+
                 cleanNode(child);
             }
         }
@@ -130,12 +147,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editor) {
         editor.addEventListener('paste', (e) => {
             if (!e.clipboardData) return;
+
+            // Panodaki resim kontrolü (Word veya ekran görüntüsü yapıştırma)
+            const items = e.clipboardData.items;
+            let hasImage = false;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const blob = items[i].getAsFile();
+                    if (blob) {
+                        const objectUrl = URL.createObjectURL(blob);
+                        insertImage(objectUrl, 'Yapıştırılan resim');
+                        hasImage = true;
+                        break;
+                    }
+                }
+            }
+            if (hasImage) return;
+
             const html = e.clipboardData.getData('text/html');
             const text = e.clipboardData.getData('text/plain');
 
             if (html && html.trim().length > 0) {
                 e.preventDefault();
                 e.stopPropagation();
+                // Word formatı korunarak temizlenmiş HTML yapıştırılır
                 const cleanHtml = sanitizeWordHtml(html);
                 document.execCommand('insertHTML', false, cleanHtml);
                 updateStats();
