@@ -1,12 +1,16 @@
 /* LibreOffice Writer Desktop Classic Styles */
+@import url('theme.css');
+@import url('utils.css');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=Liberation+Sans:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     user-select: none;
+    background-color: var(--color-bg-main);
+    color: var(--color-text-main);
 }
 
-/* Compact Desktop Toolbar Buttons - Fixed Box Sizing to Prevent Shifting */
+/* Compact Desktop Toolbar Buttons */
 .desktop-btn {
     display: inline-flex;
     align-items: center;
@@ -15,7 +19,7 @@ body {
     min-width: 28px;
     padding: 0 6px;
     border-radius: 3px;
-    color: #334155;
+    color: var(--color-text-main);
     font-size: 12px;
     border: 1px solid transparent;
     box-sizing: border-box;
@@ -24,32 +28,16 @@ body {
     user-select: none;
 }
 
-.dark .desktop-btn {
-    color: #cbd5e1;
-}
-
 .desktop-btn:hover {
-    background-color: #e2e8f0;
-    border-color: #cbd5e1;
+    background-color: var(--color-btn-hover);
+    border-color: var(--color-border);
 }
 
-.dark .desktop-btn:hover {
-    background-color: #334155;
-    border-color: #475569;
-}
-
-/* Selected Active State - Fixed Width & No Shifting */
+/* Selected Active State */
 .desktop-btn.active {
-    background-color: #dbeafe !important;
-    border-color: #3b82f6 !important;
-    color: #1d4ed8 !important;
-    font-weight: 600;
-}
-
-.dark .desktop-btn.active {
-    background-color: #1e3a8a !important;
-    border-color: #3b82f6 !important;
-    color: #93c5fd !important;
+    background-color: var(--color-btn-active-bg) !important;
+    border-color: var(--color-btn-active-border) !important;
+    color: var(--color-btn-active-text) !important;
     font-weight: 600;
 }
 
@@ -58,18 +46,12 @@ body {
     font-size: 12px;
     padding: 0 6px;
     border-radius: 3px;
-    border: 1px solid #cbd5e1;
-    background-color: #ffffff;
-    color: #1e293b;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-paper);
+    color: var(--color-text-main);
     outline: none;
     cursor: pointer;
     box-sizing: border-box;
-}
-
-.dark .desktop-select {
-    background-color: #1e293b;
-    border-color: #475569;
-    color: #f1f5f9;
 }
 
 /* Menu Bar Items */
@@ -77,48 +59,32 @@ body {
     padding: 3px 8px;
     font-size: 12px;
     font-weight: 500;
-    color: #334155;
+    color: var(--color-text-main);
     cursor: pointer;
     border-radius: 3px;
     position: relative;
 }
 
-.dark .menu-bar-item {
-    color: #cbd5e1;
-}
-
 .menu-bar-item:hover, .menu-bar-item.active {
-    background-color: #cbd5e1;
-    color: #0f172a;
-}
-
-.dark .menu-bar-item:hover, .dark .menu-bar-item.active {
-    background-color: #334155;
-    color: #ffffff;
+    background-color: var(--color-btn-hover);
 }
 
 /* Horizontal Ruler Styling */
 .ruler-container {
     height: 20px;
-    background: #f1f5f9;
-    border-bottom: 1px solid #cbd5e1;
+    background: var(--color-bg-window);
+    border-bottom: 1px solid var(--color-border);
     position: relative;
     font-size: 9px;
-    color: #64748b;
+    color: var(--color-text-muted);
     user-select: none;
-}
-
-.dark .ruler-container {
-    background: #1e293b;
-    border-color: #334155;
-    color: #94a3b8;
 }
 
 /* A4 Document Paper Layout */
 #editor-page {
     width: 816px;
     min-height: 1056px;
-    background-color: #ffffff;
+    background-color: var(--color-bg-paper);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
     padding: 64px 72px;
     margin: 20px auto;
@@ -126,92 +92,21 @@ body {
     user-select: text;
 }
 
-.dark #editor-page {
-    background-color: #1e293b;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
 #editor {
     min-height: 900px;
     outline: none;
     line-height: 1.6;
     font-size: 14px;
-    color: #0f172a;
+    color: var(--color-text-main);
     font-family: 'Liberation Sans', Arial, sans-serif;
-}
-
-.dark #editor {
-    color: #f8fafc;
 }
 
 #editor:empty::before {
     content: attr(data-placeholder);
-    color: #94a3b8;
+    color: var(--color-text-muted);
     pointer-events: none;
     display: block;
     font-style: italic;
-}
-
-/* BUG FIX: Explicit List Styles Override for Tailwind CSS Reset */
-#editor ul {
-    list-style-type: disc !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-    padding-left: 2rem !important;
-}
-
-#editor ol {
-    list-style-type: decimal !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-    padding-left: 2rem !important;
-}
-
-#editor li {
-    margin-bottom: 0.25rem !important;
-    display: list-item !important;
-}
-
-/* BUG FIX: Code Block Formatting inside Editor */
-#editor pre {
-    background-color: #0f172a !important;
-    color: #34d399 !important;
-    padding: 12px 16px !important;
-    border-radius: 6px !important;
-    font-family: 'Fira Code', monospace !important;
-    font-size: 13px !important;
-    line-height: 1.5 !important;
-    margin: 12px 0 !important;
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-}
-
-#editor blockquote {
-    border-left: 4px solid #3b82f6 !important;
-    padding-left: 12px !important;
-    margin: 12px 0 !important;
-    color: #475569 !important;
-    font-style: italic !important;
-}
-
-.dark #editor blockquote {
-    color: #94a3b8 !important;
-}
-
-/* BUG FIX: Clean Color Swatches in Color Picker Dropdown */
-.color-swatch {
-    width: 22px;
-    height: 22px;
-    border-radius: 3px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: transform 0.1s ease;
-    box-sizing: border-box;
-}
-
-.color-swatch:hover {
-    transform: scale(1.15);
-    z-index: 10;
 }
 
 /* Image Selection & Resizer */
@@ -252,29 +147,17 @@ body {
 }
 
 .editor-table td, .editor-table th {
-    border: 1px solid #94a3b8;
+    border: 1px solid var(--color-table-border);
     padding: 6px 10px;
     position: relative;
     min-width: 40px;
 }
 
-.dark .editor-table td, .dark .editor-table th {
-    border-color: #475569;
-}
-
 .editor-table th {
-    background-color: #f1f5f9;
+    background-color: var(--color-table-header-bg);
     font-weight: 600;
 }
 
-.dark .editor-table th {
-    background-color: #334155;
-}
-
 .editor-table td.selected-cell {
-    background-color: #dbeafe !important;
-}
-
-.dark .editor-table td.selected-cell {
-    background-color: #1e3a8a !important;
+    background-color: var(--color-table-selected-cell) !important;
 }

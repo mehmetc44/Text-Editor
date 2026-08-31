@@ -1,0 +1,43 @@
+/* Meditör Theme CSS - Light & Dark Mode Variables */
+
+:root {
+    /* Light Theme Color Palette */
+    --color-bg-main: #e2e8f0;
+    --color-bg-window: #f1f5f9;
+    --color-bg-paper: #ffffff;
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
+    --color-border: #cbd5e1;
+    
+    /* Button & Control States */
+    --color-btn-hover: #e2e8f0;
+    --color-btn-active-bg: #dbeafe;
+    --color-btn-active-border: #3b82f6;
+    --color-btn-active-text: #1d4ed8;
+
+    /* Table Colors */
+    --color-table-border: #94a3b8;
+    --color-table-header-bg: #f1f5f9;
+    --color-table-selected-cell: #dbeafe;
+}
+
+html.dark {
+    /* Dark Theme Color Palette */
+    --color-bg-main: #020617;
+    --color-bg-window: #0f172a;
+    --color-bg-paper: #1e293b;
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-border: #334155;
+
+    /* Button & Control States */
+    --color-btn-hover: #334155;
+    --color-btn-active-bg: #1e3a8a;
+    --color-btn-active-border: #3b82f6;
+    --color-btn-active-text: #93c5fd;
+
+    /* Table Colors */
+    --color-table-border: #475569;
+    --color-table-header-bg: #334155;
+    --color-table-selected-cell: #1e3a8a;
+}

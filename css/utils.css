@@ -1,0 +1,78 @@
+/* Meditör Utils CSS - Ortak Yardımcı Sınıflar ve Sıfırlamalar */
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.8);
+}
+
+/* Explicit List Styles Override for Tailwind CSS Reset */
+#editor ul {
+    list-style-type: disc !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-left: 2rem !important;
+}
+
+#editor ol {
+    list-style-type: decimal !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-left: 2rem !important;
+}
+
+#editor li {
+    margin-bottom: 0.25rem !important;
+    display: list-item !important;
+}
+
+/* Code Block & Blockquote Styling */
+#editor pre {
+    background-color: #0f172a !important;
+    color: #34d399 !important;
+    padding: 12px 16px !important;
+    border-radius: 6px !important;
+    font-family: 'Fira Code', monospace !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    margin: 12px 0 !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+}
+
+#editor blockquote {
+    border-left: 4px solid #3b82f6 !important;
+    padding-left: 12px !important;
+    margin: 12px 0 !important;
+    color: var(--color-text-muted) !important;
+    font-style: italic !important;
+}
+
+/* Color Swatches Utility */
+.color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    box-sizing: border-box;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+    z-index: 10;
+}
