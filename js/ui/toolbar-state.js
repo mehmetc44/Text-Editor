@@ -1,31 +1,290 @@
 /**
- * Meditör - Araç Çubuğu Durum Senkronizasyonu (Toolbar State)
+ * Toolbar UI Controller & Selection State Synchronization Module
  */
 
-export function updateToolbarState(editor) {
-    if (!editor || !document.activeElement || (!editor.contains(document.activeElement) && document.activeElement !== editor)) {
-        return;
+window.ToolbarUI = (function () {
+
+    function preventFocusLoss(el) {
+        if (!el) return;
+        el.addEventListener('mousedown', (e) => e.preventDefault());
     }
 
-    try {
-        toggleBtnState('btn-bold', document.queryCommandState('bold'));
-        toggleBtnState('btn-italic', document.queryCommandState('italic'));
-        toggleBtnState('btn-underline', document.queryCommandState('underline'));
-        toggleBtnState('btn-strikethrough', document.queryCommandState('strikeThrough'));
-        toggleBtnState('btn-align-left', document.queryCommandState('justifyLeft'));
-        toggleBtnState('btn-align-center', document.queryCommandState('justifyCenter'));
-        toggleBtnState('btn-align-right', document.queryCommandState('justifyRight'));
-        toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
-        toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
-        toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
-    } catch (err) {
-        // Fallback
+    function bindToolbarBtn(id, command, value = null, editor, updateStats) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        preventFocusLoss(btn);
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (editor) editor.focus();
+            window.EditorSelection.exec(command, value);
+            updateToolbarState(editor);
+            if (typeof updateStats === 'function') updateStats(editor);
+        });
     }
-}
 
-export function toggleBtnState(btnId, isActive) {
-    const btn = document.getElementById(btnId);
-    if (btn) {
-        btn.classList.toggle('active', Boolean(isActive));
+    function updateToolbarState(editor) {
+        if (!editor || !document.activeElement || (!editor.contains(document.activeElement) && document.activeElement !== editor)) {
+            return;
+        }
+
+        try {
+            toggleBtnState('btn-bold', document.queryCommandState('bold'));
+            toggleBtnState('btn-italic', document.queryCommandState('italic'));
+            toggleBtnState('btn-underline', document.queryCommandState('underline'));
+            toggleBtnState('btn-strikethrough', document.queryCommandState('strikeThrough'));
+            toggleBtnState('btn-align-left', document.queryCommandState('justifyLeft'));
+            toggleBtnState('btn-align-center', document.queryCommandState('justifyCenter'));
+            toggleBtnState('btn-align-right', document.queryCommandState('justifyRight'));
+            toggleBtnState('btn-align-justify', document.queryCommandState('justifyFull'));
+            toggleBtnState('btn-list-ul', document.queryCommandState('insertUnorderedList'));
+            toggleBtnState('btn-list-ol', document.queryCommandState('insertOrderedList'));
+
+            const selectHeading = document.getElementById('select-heading');
+            if (selectHeading) {
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                    let parentNode = selection.anchorNode;
+                    if (parentNode && parentNode.nodeType === Node.TEXT_NODE) parentNode = parentNode.parentNode;
+                    if (parentNode && editor.contains(parentNode)) {
+                        const blockNode = parentNode.closest('h1, h2, h3, h4, blockquote, pre, p');
+                        if (blockNode) {
+                            selectHeading.value = blockNode.tagName.toLowerCase();
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Safe fallback
+        }
     }
-}
+
+    function toggleBtnState(btnId, isActive) {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            if (isActive) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    }
+
+    function init(editor) {
+        if (!editor) return;
+
+        const updateStats = window.FileManager.updateStats;
+
+        // Metin Biçimlendirme Butonları
+        bindToolbarBtn('btn-bold', 'bold', null, editor, updateStats);
+        bindToolbarBtn('btn-italic', 'italic', null, editor, updateStats);
+        bindToolbarBtn('btn-underline', 'underline', null, editor, updateStats);
+        bindToolbarBtn('btn-strikethrough', 'strikeThrough', null, editor, updateStats);
+        bindToolbarBtn('btn-undo', 'undo', null, editor, updateStats);
+        bindToolbarBtn('btn-redo', 'redo', null, editor, updateStats);
+        bindToolbarBtn('menu-edit-undo', 'undo', null, editor, updateStats);
+        bindToolbarBtn('menu-edit-redo', 'redo', null, editor, updateStats);
+
+        bindToolbarBtn('btn-align-left', 'justifyLeft', null, editor, updateStats);
+        bindToolbarBtn('btn-align-center', 'justifyCenter', null, editor, updateStats);
+        bindToolbarBtn('btn-align-right', 'justifyRight', null, editor, updateStats);
+        bindToolbarBtn('btn-align-justify', 'justifyFull', null, editor, updateStats);
+
+        bindToolbarBtn('btn-list-ul', 'insertUnorderedList', null, editor, updateStats);
+        bindToolbarBtn('btn-list-ol', 'insertOrderedList', null, editor, updateStats);
+        bindToolbarBtn('btn-indent', 'indent', null, editor, updateStats);
+        bindToolbarBtn('btn-outdent', 'outdent', null, editor, updateStats);
+        bindToolbarBtn('btn-clear-format', 'removeFormat', null, editor, updateStats);
+
+        // Kopyala
+        const btnCopyHtml = document.getElementById('btn-copy-html');
+        if (btnCopyHtml) {
+            preventFocusLoss(btnCopyHtml);
+            btnCopyHtml.addEventListener('click', (e) => {
+                e.preventDefault();
+                const cleanHtml = window.FileManager.getCleanExportHtml(editor);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(cleanHtml).then(() => {
+                        alert('HTML kaynak kodu panoya kopyalandı.');
+                    });
+                } else {
+                    alert('HTML Kodunuz:\n' + cleanHtml);
+                }
+            });
+        }
+
+        // Link & HR
+        const btnAddLink = document.getElementById('btn-add-link');
+        if (btnAddLink) {
+            preventFocusLoss(btnAddLink);
+            btnAddLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = prompt('Eklemek istediğiniz URL bağlantısını girin:', 'https://');
+                if (url && url.trim()) {
+                    editor.focus();
+                    window.EditorSelection.exec('createLink', url.trim());
+                    updateStats(editor);
+                }
+            });
+        }
+
+        const btnInsertHr = document.getElementById('btn-insert-hr');
+        if (btnInsertHr) {
+            preventFocusLoss(btnInsertHr);
+            btnInsertHr.addEventListener('click', (e) => {
+                e.preventDefault();
+                editor.focus();
+                window.EditorSelection.exec('insertHorizontalRule');
+                updateStats(editor);
+            });
+        }
+
+        // Başlık, Font Ailesi & Boyutu Seçimleri
+        document.getElementById('select-heading')?.addEventListener('change', (e) => {
+            editor.focus();
+            const val = e.target.value;
+            if (val === 'pre') {
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const selectedText = range.toString() || 'Kod buraya...';
+                    const pre = document.createElement('pre');
+                    const code = document.createElement('code');
+                    code.textContent = selectedText;
+                    pre.appendChild(code);
+                    range.deleteContents();
+                    range.insertNode(pre);
+                }
+            } else {
+                const tag = val.toLowerCase();
+                try { document.execCommand('formatBlock', false, `<${tag}>`); }
+                catch (err) { document.execCommand('formatBlock', false, tag); }
+            }
+            updateStats(editor);
+        });
+
+        document.getElementById('select-font-family')?.addEventListener('change', (e) => {
+            editor.focus();
+            window.EditorSelection.applyInlineStyle('fontFamily', e.target.value);
+        });
+
+        document.getElementById('select-font-size')?.addEventListener('change', (e) => {
+            editor.focus();
+            window.EditorSelection.applyInlineStyle('fontSize', e.target.value);
+        });
+
+        // Renk Paleti Açılır Menüleri
+        const btnTextColor = document.getElementById('btn-text-color');
+        const dropdownTextColor = document.getElementById('dropdown-text-color');
+        const btnBgColor = document.getElementById('btn-bg-color');
+        const dropdownBgColor = document.getElementById('dropdown-bg-color');
+
+        if (btnTextColor && dropdownTextColor) {
+            btnTextColor.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownTextColor.classList.toggle('hidden');
+                if (dropdownBgColor) dropdownBgColor.classList.add('hidden');
+            });
+        }
+
+        if (btnBgColor && dropdownBgColor) {
+            btnBgColor.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownBgColor.classList.toggle('hidden');
+                if (dropdownTextColor) dropdownTextColor.classList.add('hidden');
+            });
+        }
+
+        document.addEventListener('click', () => {
+            if (dropdownTextColor) dropdownTextColor.classList.add('hidden');
+            if (dropdownBgColor) dropdownBgColor.classList.add('hidden');
+        });
+
+        document.querySelectorAll('#dropdown-text-color button[data-color]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                editor.focus();
+                const color = btn.getAttribute('data-color');
+                window.EditorSelection.exec('foreColor', color);
+                const indicator = document.getElementById('text-color-indicator');
+                if (indicator) indicator.style.backgroundColor = color;
+                if (dropdownTextColor) dropdownTextColor.classList.add('hidden');
+            });
+        });
+
+        document.getElementById('input-custom-text-color')?.addEventListener('input', (e) => {
+            editor.focus();
+            const color = e.target.value;
+            window.EditorSelection.exec('foreColor', color);
+            const indicator = document.getElementById('text-color-indicator');
+            if (indicator) indicator.style.backgroundColor = color;
+        });
+
+        document.querySelectorAll('#dropdown-bg-color button[data-bgcolor]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                editor.focus();
+                const color = btn.getAttribute('data-bgcolor');
+                try { window.EditorSelection.exec('hiliteColor', color); } catch (err) { window.EditorSelection.exec('backColor', color); }
+                const indicator = document.getElementById('bg-color-indicator');
+                if (indicator) indicator.style.backgroundColor = color === 'transparent' ? '#fef08a' : color;
+                if (dropdownBgColor) dropdownBgColor.classList.add('hidden');
+            });
+        });
+
+        document.getElementById('input-custom-bg-color')?.addEventListener('input', (e) => {
+            editor.focus();
+            const color = e.target.value;
+            try { window.EditorSelection.exec('hiliteColor', color); } catch (err) { window.EditorSelection.exec('backColor', color); }
+            const indicator = document.getElementById('bg-color-indicator');
+            if (indicator) indicator.style.backgroundColor = color;
+        });
+
+        // Gece / Gündüz Tema Modu
+        const btnToggleTheme = document.getElementById('btn-toggle-theme');
+        if (btnToggleTheme) {
+            btnToggleTheme.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+            });
+        }
+
+        // Temizle & Yeni Belge
+        const btnClearAll = document.getElementById('btn-clear-all');
+        const tbNew = document.getElementById('tb-new');
+        const menuFileNew = document.getElementById('menu-file-new');
+
+        const clearContent = () => {
+            if (confirm('Belge içeriği temizlenecek. Emin misiniz?')) {
+                editor.innerHTML = '';
+                const htmlTextarea = document.getElementById('html-textarea');
+                if (htmlTextarea) htmlTextarea.value = '';
+                updateStats(editor);
+            }
+        };
+
+        if (btnClearAll) btnClearAll.addEventListener('click', clearContent);
+        if (tbNew) tbNew.addEventListener('click', clearContent);
+        if (menuFileNew) menuFileNew.addEventListener('click', clearContent);
+
+        // Modallar Kapatma
+        const modalImage = document.getElementById('modal-image');
+        const modalTable = document.getElementById('modal-table');
+        const modalRevisions = document.getElementById('modal-revisions');
+        const btnCloseModals = document.querySelectorAll('.btn-close-modal');
+
+        btnCloseModals.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (modalImage) modalImage.classList.add('hidden');
+                if (modalTable) modalTable.classList.add('hidden');
+                if (modalRevisions) modalRevisions.classList.add('hidden');
+            });
+        });
+
+        // Selection Change Listeners
+        document.addEventListener('selectionchange', () => updateToolbarState(editor));
+        editor.addEventListener('keyup', () => updateToolbarState(editor));
+        editor.addEventListener('mouseup', () => updateToolbarState(editor));
+    }
+
+    return {
+        init,
+        updateToolbarState,
+        preventFocusLoss
+    };
+})();

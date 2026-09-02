@@ -28,6 +28,9 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <!-- Mammoth.js for Word (.docx) Import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
     <!-- Custom Editor Styles -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/utils.css">
@@ -443,7 +446,7 @@
     <footer
         class="bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-800 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center justify-between z-30 select-none">
         <div class="flex items-center space-x-4 text-[11px]">
-            <span>Sayfa 1 / 1</span>
+            <span id="stat-pages">Sayfa 1 / 1</span>
             <span class="text-slate-300">|</span>
             <span><strong id="stat-words" class="font-semibold text-slate-800 dark:text-slate-200">0</strong> sözcük,
                 <strong id="stat-chars" class="font-semibold text-slate-800 dark:text-slate-200">0</strong>
@@ -597,7 +600,17 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Modular JS Architecture (Separation of Concerns) -->
+    <script src="js/core/selection.js"></script>
+    <script src="js/core/word-sanitizer.js"></script>
+    <script src="js/modules/file-manager/docx-manager.js"></script>
+    <script src="js/modules/file-manager/pdf-manager.js"></script>
+    <script src="js/modules/file-manager/revisions-manager.js"></script>
+    <script src="js/modules/file-manager.js"></script>
+    <script src="js/modules/image-manager.js"></script>
+    <script src="js/modules/table-manager.js"></script>
+    <script src="js/modules/code-view.js"></script>
+    <script src="js/ui/toolbar-state.js"></script>
     <script src="js/main.js"></script>
 </body>
 

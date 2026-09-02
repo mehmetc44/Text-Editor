@@ -1,42 +1,51 @@
 /**
- * Meditör - Kod Görünümü ve HTML İndirme Yardımcı Modülü (Code View & Export)
+ * Code View & Live Preview Toggle Module
  */
 
-export function getCleanExportHtml(editorElement) {
-    if (!editorElement) return '';
-    const clone = editorElement.cloneNode(true);
+window.CodeView = (function () {
+    let isHtmlMode = false;
+    let isPreviewMode = false;
 
-    clone.querySelectorAll('.resize-handle-box').forEach(el => el.remove());
-    clone.querySelectorAll('.selected-image').forEach(el => el.classList.remove('selected-image'));
-    clone.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
+    function init(editor) {
+        if (!editor) return;
 
-    clone.querySelectorAll('img[data-rel-src]').forEach(img => {
-        const relSrc = img.getAttribute('data-rel-src');
-        if (relSrc) img.setAttribute('src', relSrc);
-        img.removeAttribute('data-rel-src');
-    });
+        const btnToggleHtml = document.getElementById('btn-toggle-html');
+        const btnTogglePreview = document.getElementById('btn-toggle-preview');
+        const htmlTextarea = document.getElementById('html-textarea');
+        const htmlEditorContainer = document.getElementById('html-editor-container');
+        const htmlPreviewPanel = document.getElementById('html-preview-panel');
+        const previewContent = document.getElementById('preview-content');
 
-    return clone.innerHTML;
-}
+        if (btnToggleHtml && htmlTextarea && htmlEditorContainer) {
+            btnToggleHtml.addEventListener('click', () => {
+                isHtmlMode = !isHtmlMode;
+                if (isHtmlMode) {
+                    htmlTextarea.value = window.FileManager.getCleanExportHtml(editor);
+                    editor.classList.add('hidden');
+                    htmlEditorContainer.classList.remove('hidden');
+                } else {
+                    editor.innerHTML = htmlTextarea.value;
+                    htmlEditorContainer.classList.add('hidden');
+                    editor.classList.remove('hidden');
+                    window.FileManager.updateStats(editor);
+                }
+            });
+        }
 
-export function downloadHtml(editorElement, filename = 'belge.html') {
-    const cleanHtml = getCleanExportHtml(editorElement);
-    const fullContent = `<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <title>Meditör Dokümanı</title>
-</head>
-<body>
-${cleanHtml}
-</body>
-</html>`;
+        if (btnTogglePreview && htmlPreviewPanel && previewContent) {
+            btnTogglePreview.addEventListener('click', () => {
+                isPreviewMode = !isPreviewMode;
+                if (isPreviewMode) {
+                    previewContent.innerHTML = isHtmlMode ? htmlTextarea.value : window.FileManager.getCleanExportHtml(editor);
+                    htmlPreviewPanel.classList.remove('hidden');
+                } else {
+                    htmlPreviewPanel.classList.add('hidden');
+                }
+            });
+        }
+    }
 
-    const blob = new Blob([fullContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-}
+    return {
+        init
+    };
+})();
