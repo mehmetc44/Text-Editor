@@ -1,6 +1,6 @@
 /**
  * Core Word Sanitizer & Paste Filter Engine
- * Cleans incoming HTML from MS Word / Office formatting artifacts while preserving essential styles.
+ * Cleans incoming HTML from MS Word / Office formatting artifacts while preserving colors, cell shading, table layouts, image sizes & shapes.
  */
 
 window.WordSanitizer = (function () {
@@ -9,7 +9,8 @@ window.WordSanitizer = (function () {
         'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
         'UL', 'OL', 'LI', 'BLOCKQUOTE', 'PRE', 'CODE',
         'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD',
-        'A', 'IMG', 'SPAN', 'DIV', 'SUB', 'SUP'
+        'A', 'IMG', 'SPAN', 'DIV', 'SUB', 'SUP',
+        'FONT', 'CENTER', 'HR', 'MARK', 'DEL', 'INS', 'FIGURE', 'FIGCAPTION'
     ]);
 
     function sanitizeWordHtml(htmlContent) {
@@ -30,6 +31,23 @@ window.WordSanitizer = (function () {
             if (child.nodeType === Node.ELEMENT_NODE) {
                 const tagName = child.tagName.toUpperCase();
 
+                // FONT etiketini SPAN etiketine dönüştürerek renkleri ve font boyutu bilgilerini %100 koru
+                if (tagName === 'FONT') {
+                    const span = document.createElement('span');
+                    if (child.hasAttribute('color')) span.style.color = child.getAttribute('color');
+                    if (child.hasAttribute('face')) span.style.fontFamily = child.getAttribute('face');
+                    if (child.hasAttribute('size')) {
+                        const sizeMap = { '1': '10px', '2': '12px', '3': '14px', '4': '16px', '5': '18px', '6': '24px', '7': '36px' };
+                        span.style.fontSize = sizeMap[child.getAttribute('size')] || '14px';
+                    }
+                    if (child.hasAttribute('style')) span.setAttribute('style', child.getAttribute('style'));
+
+                    while (child.firstChild) span.appendChild(child.firstChild);
+                    node.replaceChild(span, child);
+                    cleanNode(span);
+                    continue;
+                }
+
                 if (tagName.includes(':') || !ALLOWED_TAGS.has(tagName)) {
                     if (child.hasChildNodes()) {
                         while (child.firstChild) {
@@ -47,26 +65,71 @@ window.WordSanitizer = (function () {
                     }
                 }
 
-                // Word'den gelen kaydırıcı inline stilleri temizle ve normalleştir
+                // Inline Stilleri Güvenli Şekilde Normalleştir (Renkler, Arkaplanlar ve Şekiller Muhafaza Edilir)
                 if (child.hasAttribute('style')) {
                     normalizeElementStyle(child, tagName);
                 }
 
-                // Tabloları A4 kağıt genişliğine sığacak şekilde normalleştir
+                // Tabloları Normalleştir ama Word Hücre Renklerini ve Çerçevelerini Koru
                 if (tagName === 'TABLE') {
-                    child.classList.add('editor-table');
-                    child.style.width = '100%';
+                    const styleAttr = child.getAttribute('style') || '';
+                    const borderAttr = child.getAttribute('border');
+                    const hasNoBorder = borderAttr === '0' ||
+                        styleAttr.includes('border: none') ||
+                        styleAttr.includes('border:none') ||
+                        styleAttr.includes('border-style: none') ||
+                        (child.style.border && (child.style.border.includes('none') || child.style.border === '0px'));
+
+                    if (hasNoBorder) {
+                        child.classList.add('editor-table-borderless');
+                    } else {
+                        child.classList.add('editor-table');
+                    }
+
+                    if (!child.style.width) child.style.width = '100%';
                     child.style.maxWidth = '100%';
                     child.style.margin = '12px 0';
                     child.style.borderCollapse = 'collapse';
+
+                    // Hücre Renklerini ve Stillerini Koruyarak Taşmayı Önle
+                    child.querySelectorAll('td, th').forEach(cell => {
+                        cell.style.maxWidth = '100%';
+                        cell.style.wordBreak = 'break-word';
+                        cell.style.overflowWrap = 'break-word';
+
+                        // Word Hücre Arkaplan Rengi (bgcolor özniteliği veya inline arkaplan) Varsa Korunur
+                        if (cell.getAttribute('bgcolor')) {
+                            cell.style.backgroundColor = cell.getAttribute('bgcolor');
+                        }
+                    });
                 }
 
-                // Görselleri A4 kağıt sınırına kenetle
+                // Görsel Boyutlarını, Şekillerini (Border-Radius, Çerçeve) ve Oranlarını Koru
                 if (tagName === 'IMG') {
                     child.classList.add('editor-image');
                     child.style.maxWidth = '100%';
-                    child.style.height = 'auto';
+
+                    // Orijinal genişlik/yükseklik öznitelikleri veya stiller varsa muhafaza et
+                    if (child.hasAttribute('width') && !child.style.width) {
+                        const w = child.getAttribute('width');
+                        child.style.width = (w.endsWith('%') || w.endsWith('px')) ? w : `${w}px`;
+                    }
+                    if (child.hasAttribute('height') && !child.style.height) {
+                        const h = child.getAttribute('height');
+                        child.style.height = (h.endsWith('%') || h.endsWith('px')) ? h : `${h}px`;
+                    }
+
+                    if (!child.style.height && !child.hasAttribute('height')) {
+                        child.style.height = 'auto';
+                    }
                     child.style.display = 'inline-block';
+                    child.style.verticalAlign = 'middle';
+
+                    // Çakışmayı önlemek için kaydırıcı float/position değerlerini temizle
+                    if (child.style.float) child.style.float = 'none';
+                    if (child.style.position === 'absolute' || child.style.position === 'fixed') {
+                        child.style.position = 'static';
+                    }
                 }
 
                 cleanNode(child);
@@ -96,12 +159,6 @@ window.WordSanitizer = (function () {
         // Kağıdı aşan sabit piksel genişliklerini %100 yap
         if (style.width && parseInt(style.width) > 634) {
             style.width = '100%';
-        }
-        style.maxWidth = '100%';
-
-        // Paragraf satır yüksekliğini düzelt
-        if (tagName === 'P' || tagName === 'DIV') {
-            style.lineHeight = '1.25';
         }
     }
 
