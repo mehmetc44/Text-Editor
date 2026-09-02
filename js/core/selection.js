@@ -46,7 +46,7 @@ window.EditorSelection = (function () {
 
             // 3. ATA (ancestor) span'ları kontrol et ve parçala (split)
             let ancestor = span.parentNode;
-            while (ancestor && ancestor !== editor) {
+            while (ancestor && !ancestor.classList?.contains('page-content') && ancestor.id !== 'editor' && ancestor.id !== 'pages-container') {
                 if (ancestor.nodeType === Node.ELEMENT_NODE &&
                     ancestor.tagName === 'SPAN' &&
                     ancestor.style[styleName]) {

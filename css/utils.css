@@ -20,27 +20,27 @@
 }
 
 /* Explicit List Styles Override for Tailwind CSS Reset */
-#editor ul {
+:is(#editor, .page-content) ul {
     list-style-type: disc !important;
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
     padding-left: 2rem !important;
 }
 
-#editor ol {
+:is(#editor, .page-content) ol {
     list-style-type: decimal !important;
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
     padding-left: 2rem !important;
 }
 
-#editor li {
+:is(#editor, .page-content) li {
     margin-bottom: 0.25rem !important;
     display: list-item !important;
 }
 
 /* Explicit Heading Styles Override for Tailwind CSS Reset */
-#editor h1 {
+:is(#editor, .page-content) h1 {
     font-size: 2em !important;
     font-weight: 700 !important;
     margin-top: 0.67em !important;
@@ -48,7 +48,7 @@
     line-height: 1.25 !important;
 }
 
-#editor h2 {
+:is(#editor, .page-content) h2 {
     font-size: 1.5em !important;
     font-weight: 700 !important;
     margin-top: 0.75em !important;
@@ -56,7 +56,7 @@
     line-height: 1.3 !important;
 }
 
-#editor h3 {
+:is(#editor, .page-content) h3 {
     font-size: 1.25em !important;
     font-weight: 600 !important;
     margin-top: 0.83em !important;
@@ -64,7 +64,7 @@
     line-height: 1.4 !important;
 }
 
-#editor h4 {
+:is(#editor, .page-content) h4 {
     font-size: 1.1em !important;
     font-weight: 600 !important;
     margin-top: 1em !important;
@@ -72,7 +72,7 @@
 }
 
 /* Code Block & Blockquote Styling */
-#editor pre {
+:is(#editor, .page-content) pre {
     background-color: #0f172a !important;
     color: #34d399 !important;
     padding: 12px 16px !important;
@@ -85,7 +85,7 @@
     word-break: break-word !important;
 }
 
-#editor blockquote {
+:is(#editor, .page-content) blockquote {
     border-left: 4px solid #3b82f6 !important;
     padding-left: 12px !important;
     margin: 12px 0 !important;

@@ -81,29 +81,64 @@ body {
     user-select: none;
 }
 
-/* A4 Document Paper Layout */
-#editor-page {
-    width: 816px;
-    min-height: 1056px;
-    background-color: var(--color-bg-paper);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    padding: 64px 72px;
-    margin: 20px auto;
+/* Image 2 Exact A4 Paper Card Layout */
+.a4-page-card {
+    width: 794px;
+    min-height: 1123px;
+    background-color: var(--color-bg-paper, #ffffff);
+    border: 1px solid var(--color-border, #cbd5e1);
+    border-radius: 4px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    padding: 72px 80px;
+    margin: 12px auto;
     position: relative;
+    box-sizing: border-box;
     user-select: text;
 }
 
-#editor {
-    min-height: 900px;
+.page-gap-divider {
+    width: 794px;
+    height: 28px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.page-content, #editor {
+    min-height: 960px;
     outline: none;
-    line-height: 1.15;
+    line-height: 1.25;
     font-size: 14px;
     color: var(--color-text-main);
     font-family: 'Liberation Sans', Arial, sans-serif;
 }
 
+/* Image 2 Exact Corner Page Number (1, 2, 3...) at Bottom Right Outside Card Border */
+.page-number-corner {
+    position: absolute;
+    bottom: -2px;
+    right: -16px;
+    font-size: 12px;
+    color: var(--color-text-muted, #64748b);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Prevent text lines, table cells, images, and headings from being awkwardly split */
+.editor-table tr,
+.editor-table td,
+.editor-table th,
+blockquote,
+h1, h2, h3, h4,
+.editor-image {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
 #editor p,
-#editor div {
+#editor div,
+.page-content p,
+.page-content div {
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1.25;
@@ -188,4 +223,41 @@ body {
     border: none !important;
     padding: 6px 10px;
     vertical-align: middle;
+}
+
+/* MS Word Style Paper Gap & Side Page Numbers */
+.word-page-gap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 48px;
+    margin: 40px -80px;
+    background: var(--color-bg-main, #e2e8f0);
+    border-top: 1px solid var(--color-border, #cbd5e1);
+    border-bottom: 1px solid var(--color-border, #cbd5e1);
+    padding-right: 24px;
+    user-select: none;
+    pointer-events: none;
+    position: relative;
+    z-index: 10;
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.word-page-number-side {
+    background: var(--color-bg-paper, #ffffff);
+    border: 1px solid var(--color-border, #cbd5e1);
+    color: var(--color-text-muted, #64748b);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+@media print {
+    .word-page-gap {
+        display: none !important;
+        page-break-before: always !important;
+        break-before: page !important;
+    }
 }

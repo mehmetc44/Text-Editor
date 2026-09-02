@@ -4,45 +4,73 @@
  */
 
 window.FileManager = (function () {
-    function getCleanExportHtml(editor) {
-        if (!editor) return '';
-        const clone = editor.cloneNode(true);
+    function getCleanExportHtml() {
+        const pagesContainer = document.getElementById('pages-container');
+        if (!pagesContainer) return '';
+
+        const clone = pagesContainer.cloneNode(true);
+        clone.querySelectorAll('.page-number-corner').forEach(el => el.remove());
         clone.querySelectorAll('.resize-handle-box').forEach(el => el.remove());
         clone.querySelectorAll('.selected-image').forEach(el => el.classList.remove('selected-image'));
         clone.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
 
-        clone.querySelectorAll('img[data-rel-src]').forEach(img => {
+        let combinedHtml = '';
+        clone.querySelectorAll('.page-content, #editor').forEach(part => {
+            combinedHtml += part.innerHTML;
+        });
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = combinedHtml || clone.innerHTML;
+
+        tempDiv.querySelectorAll('img[data-rel-src]').forEach(img => {
             const relSrc = img.getAttribute('data-rel-src');
             if (relSrc) img.setAttribute('src', relSrc);
             img.removeAttribute('data-rel-src');
         });
 
-        return clone.innerHTML;
+        return tempDiv.innerHTML;
     }
 
     function updateStats(editor) {
-        if (!editor) return;
+        const pagesContainer = document.getElementById('pages-container');
+        let fullText = '';
+        if (pagesContainer) {
+            const pageContents = pagesContainer.querySelectorAll('.page-content');
+            if (pageContents.length > 0) {
+                pageContents.forEach(p => {
+                    fullText += ' ' + (p.innerText || p.textContent || '');
+                });
+            } else if (editor) {
+                fullText = editor.innerText || editor.textContent || '';
+            }
+        } else if (editor) {
+            fullText = editor.innerText || editor.textContent || '';
+        }
+
         const statWords = document.getElementById('stat-words');
         const statChars = document.getElementById('stat-chars');
-        const statPages = document.getElementById('stat-pages');
 
-        const text = editor.innerText || editor.textContent || '';
-        const cleanText = text.trim();
+        const cleanText = fullText.trim();
         const charCount = cleanText ? cleanText.length : 0;
         const wordCount = cleanText ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
 
-        const pageHeight = 1123;
-        const totalPages = Math.max(1, Math.ceil((editor.scrollHeight || 1123) / pageHeight));
-
-        if (statPages) statPages.textContent = `Sayfa 1 / ${totalPages}`;
         if (statChars) statChars.textContent = charCount.toLocaleString();
         if (statWords) statWords.textContent = wordCount.toLocaleString();
+
+        if (window.PaginationManager) {
+            window.PaginationManager.updatePages(editor || document.getElementById('editor'));
+        }
     }
 
     function init(editor) {
         if (!editor) return;
 
-        editor.addEventListener('input', () => updateStats(editor));
+        const pagesContainer = document.getElementById('pages-container');
+        if (pagesContainer) {
+            pagesContainer.addEventListener('input', () => updateStats(editor));
+        } else {
+            editor.addEventListener('input', () => updateStats(editor));
+        }
         updateStats(editor);
 
         // Word Import (.docx / .doc / .html)

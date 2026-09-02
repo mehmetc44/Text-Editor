@@ -79,6 +79,7 @@ window.DocxManager = (function () {
                         "p[style-name='Heading 4'] => h4:fresh",
                         "p[style-name='Quote'] => blockquote:fresh",
                         "r[style-name='Strong'] => strong",
+                        "br[type='page'] => div.word-page-break:fresh",
                         "table => table.editor-table:fresh",
                         "tr => tr:fresh",
                         "td => td:fresh",
@@ -95,15 +96,32 @@ window.DocxManager = (function () {
                             htmlOutput = applyTableShadingToHtml(htmlOutput, tableShadingMap);
                         }
 
-                        // 4. Eğer üstbilgi logosu bulunduysa ve belgede henüz yoksa en başa ekle
+                        // 4. Eğer üstbilgi logosu bulunduysa ve belgede henük yoksa en başa ekle
                         if (headerLogoSrc && !htmlOutput.includes(headerLogoSrc)) {
                             const logoHtml = `<div class="docx-header-logo mb-4"><img src="${headerLogoSrc}" style="max-height: 85px; max-width: 100%; display: block; margin-bottom: 16px;" alt="Logo" /></div>`;
                             htmlOutput = logoHtml + htmlOutput;
                         }
 
+                        // 5. HTML'i sanitize et (word-page-break div'leri korunarak)
                         const cleanHtml = window.WordSanitizer.sanitizeWordHtml(htmlOutput);
-                        editor.innerHTML = cleanHtml || htmlOutput;
-                        if (typeof onSuccess === 'function') onSuccess(file.name);
+                        const finalHtml = cleanHtml || htmlOutput;
+
+                        // 6. PaginationManager ile sayfa kırılmalarını tespit et ve çoklu kart oluştur
+                        if (window.PaginationManager && window.PaginationManager.splitByPageBreaks) {
+                            const pageContents = window.PaginationManager.splitByPageBreaks(finalHtml);
+
+                            // Çoklu sayfa kartları oluştur
+                            const newEditor = window.PaginationManager.rebuildPages(pageContents);
+
+                            if (newEditor) {
+                                // Yeni editör elemanına event'leri yeniden bağla
+                                rebindEditorEvents(newEditor, onSuccess, file.name);
+                            }
+                        } else {
+                            // PaginationManager yoksa eski davranış
+                            editor.innerHTML = finalHtml;
+                            if (typeof onSuccess === 'function') onSuccess(file.name);
+                        }
                     })
                     .catch(err => {
                         console.warn('Mammoth okuma hatası, metin okuyucuya geçiliyor:', err);
@@ -188,6 +206,18 @@ window.DocxManager = (function () {
         const b = parseInt(color.substring(4, 6), 16);
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
         return brightness < 150;
+    }
+
+    function rebindEditorEvents(newEditor, onSuccess, fileName) {
+        if (window.FileManager) {
+            window.FileManager.updateStats(newEditor);
+        }
+        if (window.PaginationManager) {
+            window.PaginationManager.updatePages(newEditor);
+        }
+        if (typeof onSuccess === 'function') {
+            onSuccess(fileName);
+        }
     }
 
     function readAsTextFallback(file, editor, onSuccess) {

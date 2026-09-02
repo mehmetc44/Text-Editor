@@ -60,7 +60,10 @@ window.WordSanitizer = (function () {
 
                 if (child.hasAttribute('class')) {
                     const className = child.getAttribute('class') || '';
-                    if (className.includes('Mso') || className.includes('w:')) {
+                    // word-page-break sınıfını koru — sayfa kırılma ayrıştırmasında kullanılacak
+                    if (className.includes('word-page-break')) {
+                        // Page break div'ini olduğu gibi bırak
+                    } else if (className.includes('Mso') || className.includes('w:')) {
                         child.removeAttribute('class');
                     }
                 }

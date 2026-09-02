@@ -37,6 +37,14 @@ function initApp() {
         window.CodeView.init(editor);
     }
 
+    if (window.PaginationManager) {
+        window.PaginationManager.init(editor);
+    }
+
+    if (window.FindReplaceManager) {
+        window.FindReplaceManager.init();
+    }
+
     if (window.ToolbarUI) {
         window.ToolbarUI.init(editor);
     }
