@@ -203,7 +203,7 @@ window.TableManager = (function () {
     /* ── Table Properties Panel ── */
     function buildTablePropsDD() {
         const dd = ddPanel();
-        setS(dd, { ...dd.style, width:'290px', padding:'12px 14px' });
+        setS(dd, { width:'290px', padding:'12px 14px' });
         dd.innerHTML = `
             <div style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
                 <i class="fa-solid fa-chevron-left" style="font-size:10px;cursor:pointer;color:#6b7280" data-close></i>
@@ -307,7 +307,7 @@ window.TableManager = (function () {
     /* ── Cell Properties Panel ── */
     function buildCellPropsDD() {
         const dd = ddPanel();
-        setS(dd, { ...dd.style, width:'260px', padding:'12px 14px' });
+        setS(dd, { width:'260px', padding:'12px 14px' });
         dd.innerHTML = `
             <div style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
                 <i class="fa-solid fa-chevron-left" style="font-size:10px;cursor:pointer;color:#6b7280" data-close></i>
@@ -683,26 +683,69 @@ window.TableManager = (function () {
         const sizeLabel = document.getElementById('matrix-size-label');
         const btnCustom = document.getElementById('menu-insert-table-custom');
         const modal = document.getElementById('modal-table');
-        if (btnCustom && modal) btnCustom.addEventListener('click', (e) => { e.preventDefault(); modal.classList.remove('hidden'); });
-        if (!container) return;
-        container.innerHTML = '';
-        const cells = [];
-        for (let r = 1; r <= 10; r++) {
-            for (let c = 1; c <= 10; c++) {
-                const cell = el('div');
-                cell.className = 'table-matrix-cell';
-                cell.dataset.row = r; cell.dataset.col = c;
-                cell.title = `${r} × ${c}`;
-                container.appendChild(cell);
-                cells.push(cell);
-                cell.addEventListener('mouseenter', () => {
-                    if (sizeLabel) sizeLabel.textContent = `${r} x ${c}`;
-                    cells.forEach(cc => { const cr = +cc.dataset.row, ccc = +cc.dataset.col; cc.classList.toggle('active', cr <= r && ccc <= c); });
-                });
-                cell.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); createTable(editor, r, c); });
-            }
+
+        if (btnCustom && modal) {
+            btnCustom.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.classList.remove('hidden');
+            });
         }
-        container.addEventListener('mouseleave', () => { if (sizeLabel) sizeLabel.textContent = '1 x 1'; cells.forEach(c => c.classList.remove('active')); });
+
+        if (!container) return;
+
+        if (container.children.length === 0) {
+            let html = '';
+            for (let r = 1; r <= 10; r++) {
+                for (let c = 1; c <= 10; c++) {
+                    html += `<div class="table-matrix-cell" data-row="${r}" data-col="${c}" title="${r} × ${c}" style="width:18px;height:18px;background-color:#ffffff;border:1px solid #cbd5e1;border-radius:2px;cursor:pointer;box-sizing:border-box;"></div>`;
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        const cells = Array.from(container.querySelectorAll('.table-matrix-cell'));
+
+        cells.forEach(cell => {
+            const r = parseInt(cell.getAttribute('data-row') || '1');
+            const c = parseInt(cell.getAttribute('data-col') || '1');
+
+            cell.addEventListener('mouseenter', () => {
+                if (sizeLabel) sizeLabel.textContent = `${r} x ${c}`;
+                cells.forEach(cc => {
+                    const cr = parseInt(cc.getAttribute('data-row') || '1');
+                    const ccc = parseInt(cc.getAttribute('data-col') || '1');
+                    if (cr <= r && ccc <= c) {
+                        cc.style.backgroundColor = '#3b82f6';
+                        cc.style.borderColor = '#1d4ed8';
+                    } else {
+                        cc.style.backgroundColor = '#ffffff';
+                        cc.style.borderColor = '#cbd5e1';
+                    }
+                });
+            });
+
+            cell.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                createTable(editor, r, c);
+                
+                // Hide dropdown to reset state
+                const dropdown = container.closest('.hidden');
+                if (dropdown) {
+                    const oldStyle = dropdown.style.display;
+                    dropdown.style.display = 'none';
+                    setTimeout(() => { dropdown.style.display = oldStyle; }, 150);
+                }
+            });
+        });
+
+        container.addEventListener('mouseleave', () => {
+            if (sizeLabel) sizeLabel.textContent = '1 x 1';
+            cells.forEach(cc => {
+                cc.style.backgroundColor = '#ffffff';
+                cc.style.borderColor = '#cbd5e1';
+            });
+        });
     }
 
     /* ═══════════════ CREATE TABLE ═══════════════ */
@@ -729,22 +772,35 @@ window.TableManager = (function () {
         }
 
         target.focus();
+        let inserted = false;
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0) {
             const range = sel.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(table);
-            // Move cursor after table
-            const after = document.createElement('p');
-            after.innerHTML = '<br>';
-            table.parentNode.insertBefore(after, table.nextSibling);
-        } else {
+            if (target.contains(range.commonAncestorContainer)) {
+                range.deleteContents();
+                range.insertNode(table);
+                inserted = true;
+            }
+        }
+
+        if (!inserted) {
             target.appendChild(table);
         }
 
-        // Auto-select first cell
+        // Add paragraph break after table
+        const after = document.createElement('p');
+        after.innerHTML = '<br>';
+        if (table.parentNode) {
+            table.parentNode.insertBefore(after, table.nextSibling);
+        }
+
+        // Auto-select first cell and trigger toolbar
         const fc = table.querySelector('td, th');
-        if (fc) setTimeout(() => fc.click(), 60);
+        if (fc) {
+            setTimeout(() => {
+                selectTable(table, fc);
+            }, 50);
+        }
         fire();
     }
 
