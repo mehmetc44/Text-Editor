@@ -232,19 +232,23 @@ h1, h2, h3, h4,
 
 .editor-table td,
 .editor-table th {
-    border: 1px solid var(--color-table-border);
+    border: 1px solid var(--color-table-border, #cbd5e1);
     padding: 6px 10px;
     position: relative;
     min-width: 40px;
+    box-sizing: border-box;
 }
 
 .editor-table th {
-    background-color: var(--color-table-header-bg);
+    background-color: var(--color-table-header-bg, #f1f5f9);
     font-weight: 600;
 }
 
-.editor-table td.selected-cell {
-    background-color: var(--color-table-selected-cell) !important;
+.editor-table td.selected-cell,
+.editor-table th.selected-cell {
+    outline: 2px solid #2563eb !important;
+    outline-offset: -1px;
+    background-color: rgba(59, 130, 246, 0.08) !important;
 }
 
 /* Borderless Word Layout Table (Logo + Header Layouts) */
