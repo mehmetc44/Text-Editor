@@ -17,31 +17,58 @@ window.ImageManager = (function () {
             }
         });
 
-        // Image Modal Tabs
-        const tabImgFile = document.getElementById('tab-img-file');
-        const tabImgUrl = document.getElementById('tab-img-url');
-        const paneImgFile = document.getElementById('pane-img-file');
-        const paneImgUrl = document.getElementById('pane-img-url');
-
-        if (tabImgFile && tabImgUrl && paneImgFile && paneImgUrl) {
-            tabImgFile.addEventListener('click', () => {
+        // Image Modal Tab Switchers
+        function switchTab(mode) {
+            if (mode === 'file') {
                 paneImgFile.classList.remove('hidden');
                 paneImgUrl.classList.add('hidden');
                 tabImgFile.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
                 tabImgUrl.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
-            });
-
-            tabImgUrl.addEventListener('click', () => {
+            } else {
                 paneImgUrl.classList.remove('hidden');
                 paneImgFile.classList.add('hidden');
                 tabImgUrl.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
                 tabImgFile.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
+            }
+        }
+
+        if (tabImgFile && tabImgUrl && paneImgFile && paneImgUrl) {
+            tabImgFile.addEventListener('click', () => switchTab('file'));
+            tabImgUrl.addEventListener('click', () => switchTab('url'));
+        }
+
+        // Submenu Image Button Triggers
+        const btnMenuImgFile = document.getElementById('menu-insert-image-file');
+        const btnMenuImgUrl = document.getElementById('menu-insert-image-url');
+        const btnModalImage = document.getElementById('btn-modal-image');
+        const modalImage = document.getElementById('modal-image');
+
+        if (btnMenuImgFile && modalImage) {
+            btnMenuImgFile.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab('file');
+                modalImage.classList.remove('hidden');
+            });
+        }
+
+        if (btnMenuImgUrl && modalImage) {
+            btnMenuImgUrl.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab('url');
+                modalImage.classList.remove('hidden');
+            });
+        }
+
+        if (btnModalImage && modalImage) {
+            btnModalImage.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab('file');
+                modalImage.classList.remove('hidden');
             });
         }
 
         // Image Confirm
         const btnInsertImageConfirm = document.getElementById('btn-insert-image-confirm');
-        const modalImage = document.getElementById('modal-image');
 
         if (btnInsertImageConfirm) {
             btnInsertImageConfirm.addEventListener('click', () => {

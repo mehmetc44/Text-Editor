@@ -111,16 +111,116 @@ window.ToolbarUI = (function () {
 
         // Link & HR
         const btnAddLink = document.getElementById('btn-add-link');
-        if (btnAddLink) {
+        const modalLink = document.getElementById('modal-link');
+        const btnInsertLinkConfirm = document.getElementById('btn-insert-link-confirm');
+        const inputLinkUrl = document.getElementById('input-link-url');
+        const inputLinkText = document.getElementById('input-link-text');
+        let savedLinkRange = null;
+
+        if (btnAddLink && modalLink) {
             preventFocusLoss(btnAddLink);
             btnAddLink.addEventListener('click', (e) => {
                 e.preventDefault();
-                const url = prompt('Eklemek istediğiniz URL bağlantısını girin:', 'https://');
-                if (url && url.trim()) {
-                    editor.focus();
-                    window.EditorSelection.exec('createLink', url.trim());
-                    updateStats(editor);
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0) {
+                    savedLinkRange = sel.getRangeAt(0).cloneRange();
+                    const selectedText = sel.toString().trim();
+                    if (inputLinkText) inputLinkText.value = selectedText;
+                } else {
+                    savedLinkRange = null;
+                    if (inputLinkText) inputLinkText.value = '';
                 }
+
+                if (inputLinkUrl) inputLinkUrl.value = '';
+                modalLink.classList.remove('hidden');
+                setTimeout(() => inputLinkUrl?.focus(), 50);
+            });
+        }
+
+        if (btnInsertLinkConfirm && modalLink) {
+            btnInsertLinkConfirm.addEventListener('click', () => {
+                let url = inputLinkUrl ? inputLinkUrl.value.trim() : '';
+                const text = inputLinkText ? inputLinkText.value.trim() : '';
+
+                if (!url) {
+                    alert('Lütfen geçerli bir URL adresi girin.');
+                    return;
+                }
+
+                if (!/^https?:\/\//i.test(url) && !/^\//.test(url) && !/^mailto:/i.test(url)) {
+                    url = 'https://' + url;
+                }
+
+                modalLink.classList.add('hidden');
+                editor.focus();
+
+                const sel = window.getSelection();
+                if (savedLinkRange) {
+                    sel.removeAllRanges();
+                    sel.addRange(savedLinkRange);
+                }
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.className = 'text-blue-600 dark:text-blue-400 underline hover:text-blue-800';
+                a.textContent = text || url;
+
+                if (sel && sel.rangeCount > 0) {
+                    const range = sel.getRangeAt(0);
+                    range.deleteContents();
+                    range.insertNode(a);
+                    
+                    // Imleci linkin sonuna yerleştir
+                    range.setStartAfter(a);
+                    range.setEndAfter(a);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else {
+                    editor.appendChild(a);
+                }
+
+                if (typeof updateStats === 'function') updateStats(editor);
+            });
+        }
+
+        // Emoji Picker Logic
+        const emojiPickerGrid = document.getElementById('emoji-picker-grid');
+        if (emojiPickerGrid) {
+            const emojis = [
+                '😊', '😂', '🤣', '😍', '🥰', '😎', '🤔', '😅',
+                '👍', '👎', '🙌', '👏', '🔥', '❤️', '⭐', '🎉',
+                '🚀', '💡', '✅', '❌', '📌', '📝', '🔍', '💼',
+                '🎯', '⚡', '🌟', '💬', '📧', '🔒', '📄', '📊',
+                '📈', '🎨', '🏆', '☕'
+            ];
+
+            emojiPickerGrid.innerHTML = '';
+            emojis.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'emoji-item';
+                btn.textContent = emoji;
+                btn.title = emoji;
+
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    editor.focus();
+                    try {
+                        document.execCommand('insertText', false, emoji);
+                    } catch (err) {
+                        const sel = window.getSelection();
+                        if (sel && sel.rangeCount > 0) {
+                            const range = sel.getRangeAt(0);
+                            range.insertNode(document.createTextNode(emoji));
+                        }
+                    }
+                    if (typeof updateStats === 'function') updateStats(editor);
+                });
+
+                emojiPickerGrid.appendChild(btn);
             });
         }
 
@@ -273,6 +373,7 @@ window.ToolbarUI = (function () {
                 if (modalImage) modalImage.classList.add('hidden');
                 if (modalTable) modalTable.classList.add('hidden');
                 if (modalRevisions) modalRevisions.classList.add('hidden');
+                if (modalLink) modalLink.classList.add('hidden');
             });
         });
 

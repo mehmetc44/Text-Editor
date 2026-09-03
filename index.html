@@ -196,22 +196,91 @@
         <div class="relative group">
             <div class="menu-bar-item">Ekle</div>
             <div
-                class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
-                <button type="button" id="menu-insert-image"
-                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
-                    <i class="fa-regular fa-image mr-2"></i>Resim...
-                </button>
-                <button type="button" id="menu-insert-table"
-                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-table mr-2"></i>Tablo...
-                </button>
+                class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl rounded-b-md py-1 w-52 z-50 text-slate-700 dark:text-slate-200">
+                
+                <!-- 1. Görsel Submenu -->
+                <div class="relative group/gorsel">
+                    <div class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer">
+                        <span><i class="fa-regular fa-image text-blue-500 mr-2"></i>Görsel</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                    </div>
+                    <!-- Hover Bridge & Submenu -->
+                    <div class="hidden group-hover/gorsel:block absolute left-full top-0 -ml-2 pl-2 z-50">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md py-1 w-48 text-slate-700 dark:text-slate-200">
+                            <button type="button" id="menu-insert-image-file"
+                                class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                                <i class="fa-solid fa-laptop text-emerald-500 mr-2"></i>
+                                <span>Bilgisayardan...</span>
+                            </button>
+                            <button type="button" id="menu-insert-image-url"
+                                class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                                <i class="fa-solid fa-globe text-blue-500 mr-2"></i>
+                                <span>Link ile...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Tablo Submenu (10x10 Matrix Grid) -->
+                <div class="relative group/tablo">
+                    <div class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer">
+                        <span><i class="fa-solid fa-table text-emerald-500 mr-2"></i>Tablo</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                    </div>
+                    <!-- Hover Bridge & Submenu Matrix -->
+                    <div class="hidden group-hover/tablo:block absolute left-full top-0 -ml-2 pl-2 z-50">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md p-3 w-56 text-slate-700 dark:text-slate-200">
+                            <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-200 dark:border-slate-700">
+                                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Tablo Ekle</span>
+                                <span id="matrix-size-label" class="text-[11px] font-mono text-blue-600 dark:text-blue-400 font-bold">1 x 1</span>
+                            </div>
+                            
+                            <!-- Matrix Grid (10x10 = 100 cells generated via JS or HTML) -->
+                            <div id="table-matrix-container" class="grid grid-cols-10 gap-1 p-1 bg-slate-50 dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 select-none">
+                            </div>
+
+                            <div class="border-t border-slate-200 dark:border-slate-700 mt-2 pt-1.5">
+                                <button type="button" id="menu-insert-table-custom"
+                                    class="w-full text-left px-2 py-1 text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                                    <span><i class="fa-solid fa-sliders text-amber-500 mr-1.5"></i>Özel Tablo...</span>
+                                    <i class="fa-solid fa-ellipsis text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Link (Köprü) -->
                 <button type="button" id="btn-add-link"
-                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-link mr-2"></i>Köprü (Link)
+                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                    <i class="fa-solid fa-link text-indigo-500 mr-2"></i>
+                    <span>Link (Köprü)...</span>
                 </button>
+
+                <!-- 4. Emoji Submenu -->
+                <div class="relative group/emoji">
+                    <div class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer">
+                        <span><i class="fa-regular fa-face-smile text-amber-500 mr-2"></i>Emoji</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                    </div>
+                    <!-- Hover Bridge & Emoji Picker -->
+                    <div class="hidden group-hover/emoji:block absolute left-full top-0 -ml-2 pl-2 z-50">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md p-2 w-56 text-slate-700 dark:text-slate-200">
+                            <div class="text-[10px] font-semibold text-slate-400 mb-1 px-1">POPÜLER EMOJİLER</div>
+                            <div id="emoji-picker-grid" class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-1">
+                                <!-- Emojis dynamically populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+
+                <!-- 5. Yatay Çizgi -->
                 <button type="button" id="btn-insert-hr"
-                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-minus mr-2"></i>Yatay Çizgi
+                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+                    <i class="fa-solid fa-minus text-slate-400 mr-2"></i>
+                    <span>Yatay Çizgi</span>
                 </button>
             </div>
         </div>
@@ -649,6 +718,38 @@
                     <button type="button"
                         class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800">Kapat</button>
                 </div>
+            </div>
+        </div>
+    <!-- Link Insert Modal -->
+    <div id="modal-link"
+        class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-slate-800 rounded-md shadow-2xl border border-slate-300 dark:border-slate-700 max-w-sm w-full overflow-hidden text-xs">
+            <div
+                class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                <span><i class="fa-solid fa-link text-indigo-500 mr-1.5"></i>Link (Köprü) Ekle</span>
+                <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <div>
+                    <label class="block mb-1 font-medium text-slate-700 dark:text-slate-300">Link Adresi (URL)</label>
+                    <input type="text" id="input-link-url" placeholder="https://example.com"
+                        class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 outline-none font-mono">
+                </div>
+                <div>
+                    <label class="block mb-1 font-medium text-slate-700 dark:text-slate-300">Görüntülenecek Metin (İsteğe Bağlı)</label>
+                    <input type="text" id="input-link-text" placeholder="Örn: Tıklayınız"
+                        class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 outline-none">
+                    <p class="text-[10px] text-slate-400 mt-0.5">Boş bırakılırsa link adresi metin olarak görüntülenecektir.</p>
+                </div>
+            </div>
+            <div
+                class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-end space-x-2">
+                <button type="button"
+                    class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300">İptal</button>
+                <button type="button" id="btn-insert-link-confirm"
+                    class="px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Link Ekle</button>
             </div>
         </div>
     </div>

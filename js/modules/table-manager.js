@@ -32,6 +32,71 @@ window.TableManager = (function () {
                 if (modalTable) modalTable.classList.add('hidden');
             });
         }
+
+        initMatrixPicker(editor, onUpdateStats);
+    }
+
+    function initMatrixPicker(editor, onUpdateStats) {
+        const container = document.getElementById('table-matrix-container');
+        const sizeLabel = document.getElementById('matrix-size-label');
+        const btnCustomTable = document.getElementById('menu-insert-table-custom');
+        const modalTable = document.getElementById('modal-table');
+
+        if (btnCustomTable && modalTable) {
+            btnCustomTable.addEventListener('click', (e) => {
+                e.preventDefault();
+                modalTable.classList.remove('hidden');
+            });
+        }
+
+        if (!container) return;
+        container.innerHTML = '';
+
+        const maxRows = 10;
+        const maxCols = 10;
+        const cells = [];
+
+        for (let r = 1; r <= maxRows; r++) {
+            for (let c = 1; c <= maxCols; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'table-matrix-cell';
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.title = `${r} Satır x ${c} Sütun Tablo`;
+                container.appendChild(cell);
+                cells.push(cell);
+
+                cell.addEventListener('mouseenter', () => {
+                    highlightMatrix(r, c);
+                });
+
+                cell.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    createTable(editor, r, c, onUpdateStats);
+                });
+            }
+        }
+
+        function highlightMatrix(targetRow, targetCol) {
+            if (sizeLabel) {
+                sizeLabel.textContent = `${targetRow} x ${targetCol}`;
+            }
+            cells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                if (r <= targetRow && c <= targetCol) {
+                    cell.classList.add('active');
+                } else {
+                    cell.classList.remove('active');
+                }
+            });
+        }
+
+        container.addEventListener('mouseleave', () => {
+            if (sizeLabel) sizeLabel.textContent = '1 x 1';
+            cells.forEach(cell => cell.classList.remove('active'));
+        });
     }
 
     function createTable(editor, rows = 3, cols = 3, onUpdateStats) {
