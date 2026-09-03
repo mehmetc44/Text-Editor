@@ -297,17 +297,6 @@
             </div>
         </div>
 
-        <!-- Tablo Menu -->
-        <div class="relative group">
-            <div class="menu-bar-item">Tablo</div>
-            <div
-                class="hidden group-hover:block absolute left-0 top-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-lg rounded-b-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
-                <button type="button" id="menu-table-add"
-                    class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-plus mr-2"></i>Tablo Ekle...
-                </button>
-            </div>
-        </div>
     </nav>
 
     <!-- 3. Standard Toolbar (Row 1: File, Edit, Action Icons) -->
@@ -752,103 +741,8 @@
                     class="px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Link Ekle</button>
             </div>
         </div>
-    <!-- CKEditor 5 Style Table Contextual Floating Toolbar -->
-    <div id="table-context-toolbar"
-        class="hidden fixed z-50 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md p-1 flex items-center space-x-1 text-xs select-none transition-opacity duration-150">
-        
-        <!-- Column Menu Dropdown -->
-        <div class="relative group/col-menu">
-            <button type="button" class="px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded flex items-center space-x-1 text-blue-600 dark:text-blue-400 font-medium" title="Sütun Seçenekleri">
-                <i class="fa-solid fa-table-columns"></i>
-                <i class="fa-solid fa-chevron-down text-[9px]"></i>
-            </button>
-            <div class="hidden group-hover/col-menu:block absolute left-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
-                <label class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer border-b border-slate-200 dark:border-slate-700 mb-1">
-                    <span>Başlık Sütunu</span>
-                    <input type="checkbox" id="tbl-toggle-header-col" class="rounded text-blue-600 cursor-pointer">
-                </label>
-                <button type="button" id="tbl-btn-col-left" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                    <i class="fa-solid fa-arrow-left text-slate-400 mr-2"></i>Sola Sütun Ekle
-                </button>
-                <button type="button" id="tbl-btn-col-right" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                    <i class="fa-solid fa-arrow-right text-slate-400 mr-2"></i>Sağa Sütun Ekle
-                </button>
-                <button type="button" id="tbl-btn-col-delete" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-rose-600 dark:text-rose-400 flex items-center">
-                    <i class="fa-solid fa-trash-can mr-2"></i>Sütunu Sil
-                </button>
-            </div>
-        </div>
 
-        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
 
-        <!-- Row Menu Dropdown -->
-        <div class="relative group/row-menu">
-            <button type="button" class="px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-medium" title="Satır Seçenekleri">
-                <i class="fa-solid fa-bars font-bold"></i>
-                <i class="fa-solid fa-chevron-down text-[9px]"></i>
-            </button>
-            <div class="hidden group-hover/row-menu:block absolute left-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
-                <label class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer border-b border-slate-200 dark:border-slate-700 mb-1">
-                    <span>Başlık Satırı</span>
-                    <input type="checkbox" id="tbl-toggle-header-row" class="rounded text-emerald-600 cursor-pointer">
-                </label>
-                <button type="button" id="tbl-btn-row-above" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                    <i class="fa-solid fa-arrow-up text-slate-400 mr-2"></i>Üste Satır Ekle
-                </button>
-                <button type="button" id="tbl-btn-row-below" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                    <i class="fa-solid fa-arrow-down text-slate-400 mr-2"></i>Alta Satır Ekle
-                </button>
-                <button type="button" id="tbl-btn-row-delete" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-rose-600 dark:text-rose-400 flex items-center">
-                    <i class="fa-solid fa-trash-can mr-2"></i>Satırı Sil
-                </button>
-            </div>
-        </div>
-
-        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
-
-        <!-- Cell / Merge Operations Dropdown -->
-        <div class="relative group/cell-menu">
-            <button type="button" class="px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded flex items-center space-x-1 text-purple-600 dark:text-purple-400 font-medium" title="Hücre Seçenekleri">
-                <i class="fa-solid fa-table-cells"></i>
-                <i class="fa-solid fa-chevron-down text-[9px]"></i>
-            </button>
-            <div class="hidden group-hover/cell-menu:block absolute left-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xl rounded-md py-1 w-48 z-50 text-slate-700 dark:text-slate-200">
-                <button type="button" id="tbl-btn-merge-right" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                    <i class="fa-solid fa-object-group text-purple-500 mr-2"></i>Sağdakini Birleştir
-                </button>
-                <button type="button" id="tbl-btn-merge-down" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
-                    <i class="fa-solid fa-layer-group text-purple-500 mr-2"></i>Alttakini Birleştir
-                </button>
-                <button type="button" id="tbl-btn-split-cell" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center border-t border-slate-200 dark:border-slate-700 my-1 pt-1">
-                    <i class="fa-solid fa-scissors text-amber-500 mr-2"></i>Hücreyi Böl
-                </button>
-                <label class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between items-center cursor-pointer border-t border-slate-200 dark:border-slate-700 mt-1 pt-1">
-                    <span>Hücre Rengi</span>
-                    <input type="color" id="tbl-input-cell-bg" value="#ffffff" class="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent">
-                </label>
-            </div>
-        </div>
-
-        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
-
-        <!-- Alignment Buttons -->
-        <button type="button" id="tbl-btn-align-left" class="px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300" title="Tabloyu Sola Hizala">
-            <i class="fa-solid fa-align-left"></i>
-        </button>
-        <button type="button" id="tbl-btn-align-center" class="px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300" title="Tabloyu Ortala">
-            <i class="fa-solid fa-align-center"></i>
-        </button>
-        <button type="button" id="tbl-btn-align-right" class="px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300" title="Tabloyu Sağa Hizala">
-            <i class="fa-solid fa-align-right"></i>
-        </button>
-
-        <div class="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
-
-        <!-- Delete Table -->
-        <button type="button" id="tbl-btn-delete-table" class="px-2 py-1 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 rounded font-medium" title="Tabloyu Sil">
-            <i class="fa-solid fa-trash-can"></i>
-        </button>
-    </div>
 
     <!-- Modular JS Architecture (Separation of Concerns) -->
     <script src="js/core/selection.js"></script>

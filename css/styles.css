@@ -244,11 +244,8 @@ h1, h2, h3, h4,
     font-weight: 600;
 }
 
-.editor-table td.selected-cell,
-.editor-table th.selected-cell {
-    outline: 2px solid #2563eb !important;
-    outline-offset: -1px;
-    background-color: rgba(59, 130, 246, 0.08) !important;
+.dark .emoji-item:hover {
+    background-color: #334155;
 }
 
 /* Borderless Word Layout Table (Logo + Header Layouts) */
@@ -341,8 +338,4 @@ h1, h2, h3, h4,
 .emoji-item:hover {
     background-color: #e2e8f0;
     transform: scale(1.2);
-}
-
-.dark .emoji-item:hover {
-    background-color: #334155;
 }
