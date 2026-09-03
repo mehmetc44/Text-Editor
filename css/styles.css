@@ -162,27 +162,53 @@ h1, h2, h3, h4,
     cursor: pointer;
     display: inline-block;
     transition: outline 0.1s ease;
+    vertical-align: middle;
 }
 
 .editor-image.selected-image {
     outline: 2px solid #2563eb !important;
-    outline-offset: 1px;
+    outline-offset: 2px;
 }
 
 .resize-handle-box {
     position: absolute;
-    border: 1px dashed #2563eb;
+    border: 1.5px dashed #2563eb;
     pointer-events: none;
-    z-index: 40;
+    z-index: 99;
+    box-sizing: border-box;
 }
 
 .resize-dot {
     position: absolute;
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     background-color: #ffffff;
-    border: 1px solid #2563eb;
+    border: 1.5px solid #2563eb;
+    border-radius: 2px;
     pointer-events: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+}
+
+.resize-dot:hover {
+    background-color: #2563eb;
+    transform: scale(1.25);
+}
+
+.resize-size-badge {
+    position: absolute;
+    bottom: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    font-size: 10px;
+    font-family: monospace;
+    padding: 2px 6px;
+    border-radius: 3px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 101;
 }
 
 /* Table Styling */

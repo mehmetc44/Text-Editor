@@ -1,14 +1,60 @@
 /**
  * Image Manager & Live 8-Point Drag Resizer Overlay Module
+ * Features: Local persistent storage (IndexedDB), clean relative path references (No Base64), 
+ * and precise drag-to-resize overlay with live size badge.
  */
 
 window.ImageManager = (function () {
     let activeImage = null;
     let resizeOverlay = null;
 
+    // IndexedDB for local persistent storage of uploaded image files by relative path
+    const DB_NAME = 'MeditörImageStore';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'local_images';
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'path' });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function saveLocalImageBlob(path, blob) {
+        try {
+            const db = await openDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put({ path, blob, updatedAt: Date.now() });
+        } catch (e) {
+            console.warn('IndexedDB resim kayıt hatası:', e);
+        }
+    }
+
+    async function getLocalImageBlob(path) {
+        try {
+            const db = await openDB();
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const req = tx.objectStore(STORE_NAME).get(path);
+            return new Promise((resolve) => {
+                req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+                req.onerror = () => resolve(null);
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
     function init(editor, onUpdateStats) {
         if (!editor) return;
 
+        // Image Selection Click Handler
         editor.addEventListener('click', (e) => {
             if (e.target.tagName === 'IMG') {
                 selectImage(e.target);
@@ -17,22 +63,35 @@ window.ImageManager = (function () {
             }
         });
 
+        // Reposition resize overlay on scroll or window resize
+        const workspace = document.getElementById('editor-workspace') || window;
+        workspace.addEventListener('scroll', updateOverlayPosition);
+        window.addEventListener('resize', updateOverlayPosition);
+
+        // Rehydrate images stored in IndexedDB on init
+        rehydrateImages(editor);
+
         // Image Modal Tab Switchers
+        const tabImgFile = document.getElementById('tab-img-file');
+        const tabImgUrl = document.getElementById('tab-img-url');
+        const paneImgFile = document.getElementById('pane-img-file');
+        const paneImgUrl = document.getElementById('pane-img-url');
+
         function switchTab(mode) {
             if (mode === 'file') {
-                paneImgFile.classList.remove('hidden');
-                paneImgUrl.classList.add('hidden');
-                tabImgFile.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
-                tabImgUrl.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
+                if (paneImgFile) paneImgFile.classList.remove('hidden');
+                if (paneImgUrl) paneImgUrl.classList.add('hidden');
+                if (tabImgFile) tabImgFile.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
+                if (tabImgUrl) tabImgUrl.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
             } else {
-                paneImgUrl.classList.remove('hidden');
-                paneImgFile.classList.add('hidden');
-                tabImgUrl.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
-                tabImgFile.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
+                if (paneImgUrl) paneImgUrl.classList.remove('hidden');
+                if (paneImgFile) paneImgFile.classList.add('hidden');
+                if (tabImgUrl) tabImgUrl.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
+                if (tabImgFile) tabImgFile.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
             }
         }
 
-        if (tabImgFile && tabImgUrl && paneImgFile && paneImgUrl) {
+        if (tabImgFile && tabImgUrl) {
             tabImgFile.addEventListener('click', () => switchTab('file'));
             tabImgUrl.addEventListener('click', () => switchTab('url'));
         }
@@ -71,7 +130,7 @@ window.ImageManager = (function () {
         const btnInsertImageConfirm = document.getElementById('btn-insert-image-confirm');
 
         if (btnInsertImageConfirm) {
-            btnInsertImageConfirm.addEventListener('click', () => {
+            btnInsertImageConfirm.addEventListener('click', async () => {
                 const urlInput = document.getElementById('input-img-url');
                 const fileInput = document.getElementById('input-img-file');
                 const folderInput = document.getElementById('input-img-folder');
@@ -82,9 +141,15 @@ window.ImageManager = (function () {
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     const file = fileInput.files[0];
-                    const displayObjectUrl = URL.createObjectURL(file);
                     const relPath = `${folderPath.endsWith('/') ? folderPath : folderPath + '/'}${file.name}`;
-                    insertImage(editor, displayObjectUrl, altText, relPath, onUpdateStats);
+                    
+                    // Save to IndexedDB locally
+                    await saveLocalImageBlob(relPath, file);
+                    
+                    // Display live object URL without Base64 in HTML
+                    const displayUrl = URL.createObjectURL(file);
+                    insertImage(editor, displayUrl, altText, relPath, onUpdateStats);
+                    fileInput.value = '';
                 } else if (urlInput && urlInput.value.trim()) {
                     const customPath = urlInput.value.trim();
                     insertImage(editor, customPath, altText, customPath, onUpdateStats);
@@ -95,14 +160,28 @@ window.ImageManager = (function () {
         }
     }
 
+    async function rehydrateImages(editor) {
+        if (!editor) return;
+        const images = editor.querySelectorAll('img[data-rel-src]');
+        for (const img of images) {
+            const relSrc = img.getAttribute('data-rel-src');
+            if (relSrc && relSrc.startsWith('data/')) {
+                const blob = await getLocalImageBlob(relSrc);
+                if (blob) {
+                    img.src = URL.createObjectURL(blob);
+                }
+            }
+        }
+    }
+
     function insertImage(editor, displaySrc, alt = '', relPath = '', onUpdateStats) {
         if (!editor || !displaySrc) return;
         editor.focus();
         const img = document.createElement('img');
 
-        const finalSrc = relPath || displaySrc;
+        const finalRelPath = relPath || displaySrc;
         img.src = displaySrc;
-        img.setAttribute('data-rel-src', finalSrc);
+        img.setAttribute('data-rel-src', finalRelPath);
         img.alt = alt;
         img.className = 'editor-image';
         img.style.maxWidth = '100%';
@@ -138,33 +217,58 @@ window.ImageManager = (function () {
         }
     }
 
+    function updateOverlayPosition() {
+        if (!activeImage || !resizeOverlay) return;
+        const workspace = document.getElementById('editor-workspace');
+        if (!workspace) return;
+
+        const imgRect = activeImage.getBoundingClientRect();
+        const wsRect = workspace.getBoundingClientRect();
+
+        const top = imgRect.top - wsRect.top + workspace.scrollTop;
+        const left = imgRect.left - wsRect.left + workspace.scrollLeft;
+
+        resizeOverlay.style.top = `${top}px`;
+        resizeOverlay.style.left = `${left}px`;
+        resizeOverlay.style.width = `${imgRect.width}px`;
+        resizeOverlay.style.height = `${imgRect.height}px`;
+
+        const badge = resizeOverlay.querySelector('.resize-size-badge');
+        if (badge) {
+            badge.textContent = `${Math.round(imgRect.width)} × ${Math.round(imgRect.height)} px`;
+        }
+    }
+
     function createResizeOverlay(img) {
+        const workspace = document.getElementById('editor-workspace');
+        if (!workspace) return;
+
         resizeOverlay = document.createElement('div');
         resizeOverlay.className = 'resize-handle-box';
-        resizeOverlay.style.top = `${img.offsetTop}px`;
-        resizeOverlay.style.left = `${img.offsetLeft}px`;
-        resizeOverlay.style.width = `${img.offsetWidth}px`;
-        resizeOverlay.style.height = `${img.offsetHeight}px`;
+
+        const badge = document.createElement('div');
+        badge.className = 'resize-size-badge';
+        badge.textContent = `${Math.round(img.offsetWidth)} × ${Math.round(img.offsetHeight)} px`;
+        resizeOverlay.appendChild(badge);
 
         const positions = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
         positions.forEach(pos => {
             const dot = document.createElement('div');
             dot.className = `resize-dot resize-${pos}`;
-            if (pos.includes('n')) dot.style.top = '-4px';
-            if (pos.includes('s')) dot.style.bottom = '-4px';
-            if (pos.includes('w')) dot.style.left = '-4px';
-            if (pos.includes('e')) dot.style.right = '-4px';
-            if (pos === 'n' || pos === 's') dot.style.left = 'calc(50% - 4px)';
-            if (pos === 'w' || pos === 'e') dot.style.top = 'calc(50% - 4px)';
+            if (pos.includes('n')) dot.style.top = '-5px';
+            if (pos.includes('s')) dot.style.bottom = '-5px';
+            if (pos.includes('w')) dot.style.left = '-5px';
+            if (pos.includes('e')) dot.style.right = '-5px';
+            if (pos === 'n' || pos === 's') dot.style.left = 'calc(50% - 4.5px)';
+            if (pos === 'w' || pos === 'e') dot.style.top = 'calc(50% - 4.5px)';
             dot.style.cursor = `${pos}-resize`;
 
             dot.addEventListener('mousedown', (e) => startResizing(e, pos, img));
             resizeOverlay.appendChild(dot);
         });
 
-        if (img.parentNode) {
-            img.parentNode.insertBefore(resizeOverlay, img.nextSibling);
-        }
+        workspace.appendChild(resizeOverlay);
+        updateOverlayPosition();
     }
 
     function startResizing(e, handlePosition, img) {
@@ -195,15 +299,10 @@ window.ImageManager = (function () {
                 newHeight = newWidth / aspectRatio;
             }
 
-            img.style.width = `${newWidth}px`;
-            img.style.height = `${newHeight}px`;
+            img.style.width = `${Math.round(newWidth)}px`;
+            img.style.height = `${Math.round(newHeight)}px`;
 
-            if (resizeOverlay) {
-                resizeOverlay.style.width = `${newWidth}px`;
-                resizeOverlay.style.height = `${newHeight}px`;
-                resizeOverlay.style.top = `${img.offsetTop}px`;
-                resizeOverlay.style.left = `${img.offsetLeft}px`;
-            }
+            updateOverlayPosition();
         }
 
         function onMouseUp() {
@@ -218,6 +317,10 @@ window.ImageManager = (function () {
     return {
         init,
         insertImage,
-        clearImageSelection
+        selectImage,
+        clearImageSelection,
+        rehydrateImages,
+        saveLocalImageBlob,
+        getLocalImageBlob
     };
 })();
