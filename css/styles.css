@@ -84,7 +84,7 @@ body {
 /* Image 2 Exact A4 Paper Card Layout */
 .a4-page-card {
     width: 794px;
-    min-height: 1123px;
+    height: 1123px;
     background-color: var(--color-bg-paper, #ffffff);
     border: 1px solid var(--color-border, #cbd5e1);
     border-radius: 4px;
@@ -104,7 +104,8 @@ body {
 }
 
 .page-content, #editor {
-    min-height: 960px;
+    height: 979px; /* 1123px - (72px * 2 padding) */
+    overflow: hidden;
     outline: none;
     line-height: 1.25;
     font-size: 14px;
