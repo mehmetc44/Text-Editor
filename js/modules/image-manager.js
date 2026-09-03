@@ -415,29 +415,94 @@ window.ImageManager = (function () {
             updateOverlayPosition();
         });
 
-        // 2. Alt Text
-        const btnAlt = addToolbarBtn(imageToolbar, 'fa-solid fa-tags', 'Alt Metin Ekle');
-        btnAlt.addEventListener('click', () => {
-            if (!activeImage) return;
-            const newAlt = prompt('Görsel için Alt Metin girin:', activeImage.alt || '');
-            if (newAlt !== null) activeImage.alt = newAlt;
-        });
+
 
         addSep(imageToolbar);
 
-        // 3. Inline
-        const btnInline = addToolbarBtn(imageToolbar, 'fa-solid fa-text-width', 'Satır İçi (Inline)');
+        // 2. Inline / Align
+        const inlineWrapper = el('div');
+        setS(inlineWrapper, { position: 'relative', display: 'flex', alignItems: 'center' });
+        
+        // Main inline button
+        const btnInline = addToolbarBtn(inlineWrapper, 'fa-solid fa-text-width', 'Satır İçi (Inline)');
         btnInline.addEventListener('click', () => {
             if (!activeImage) return;
             const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
             target.className = target.tagName === 'FIGURE' ? 'editor-image-figure img-inline' : 'editor-image img-inline';
             updateOverlayPosition();
         });
+        
+        // Dropdown toggle for alignment
+        const btnInlineMenu = el('button');
+        btnInlineMenu.type = 'button';
+        btnInlineMenu.innerHTML = `<i class="fa-solid fa-caret-down"></i>`;
+        setS(btnInlineMenu, {
+            display:'flex', alignItems:'center', justifyContent:'center',
+            width:'16px', height:'28px', border:'none', background:'transparent',
+            cursor:'pointer', color:'#374151', fontSize:'12px', marginLeft:'-2px'
+        });
+        btnInlineMenu.addEventListener('mouseover', () => btnInlineMenu.style.backgroundColor = '#e2e8f0');
+        btnInlineMenu.addEventListener('mouseout', () => btnInlineMenu.style.backgroundColor = 'transparent');
+        inlineWrapper.appendChild(btnInlineMenu);
+        
+        const inlineDropdown = el('div');
+        setS(inlineDropdown, {
+            display: 'none', position: 'absolute', top: '100%', left: '0',
+            background: '#fff', border: '1px solid #d1d5db', borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '4px', minWidth: '120px', zIndex: '1000'
+        });
+        
+        ['Sola Yasla', 'Ortala', 'Sağa Yasla'].forEach((lbl, i) => {
+            const item = el('div');
+            setS(item, { padding:'4px 8px', fontSize:'13px', cursor:'pointer', color:'#374151', borderRadius:'3px' });
+            item.textContent = lbl;
+            item.addEventListener('mouseover', () => item.style.background = '#f3f4f6');
+            item.addEventListener('mouseout', () => item.style.background = 'transparent');
+            item.addEventListener('click', () => {
+                if (!activeImage) return;
+                const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
+                target.className = target.tagName === 'FIGURE' ? 'editor-image-figure' : 'editor-image';
+                const cls = i === 0 ? 'img-break-left' : (i === 1 ? 'img-break-center' : 'img-break-right');
+                target.classList.add(cls);
+                inlineDropdown.style.display = 'none';
+                updateOverlayPosition();
+            });
+            inlineDropdown.appendChild(item);
+        });
+        inlineWrapper.appendChild(inlineDropdown);
+        btnInlineMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            inlineDropdown.style.display = inlineDropdown.style.display === 'none' ? 'block' : 'none';
+            wrapDropdown.style.display = 'none';
+            const resizeDropdown = imageToolbar.querySelector('.resize-dropdown-menu');
+            if (resizeDropdown) resizeDropdown.style.display = 'none';
+        });
+        imageToolbar.appendChild(inlineWrapper);
 
-        // 4. Wrap Text
+        // 3. Wrap Text
         const wrapWrapper = el('div');
-        setS(wrapWrapper, { position: 'relative' });
+        setS(wrapWrapper, { position: 'relative', display: 'flex', alignItems: 'center' });
+        
         const btnWrap = addToolbarBtn(wrapWrapper, 'fa-solid fa-indent', 'Metni Kaydır (Wrap)');
+        btnWrap.addEventListener('click', () => {
+            if (!activeImage) return;
+            const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
+            target.className = target.tagName === 'FIGURE' ? 'editor-image-figure' : 'editor-image';
+            target.classList.add('img-wrap-left'); // default
+            updateOverlayPosition();
+        });
+
+        const btnWrapMenu = el('button');
+        btnWrapMenu.type = 'button';
+        btnWrapMenu.innerHTML = `<i class="fa-solid fa-caret-down"></i>`;
+        setS(btnWrapMenu, {
+            display:'flex', alignItems:'center', justifyContent:'center',
+            width:'16px', height:'28px', border:'none', background:'transparent',
+            cursor:'pointer', color:'#374151', fontSize:'12px', marginLeft:'-2px'
+        });
+        btnWrapMenu.addEventListener('mouseover', () => btnWrapMenu.style.backgroundColor = '#e2e8f0');
+        btnWrapMenu.addEventListener('mouseout', () => btnWrapMenu.style.backgroundColor = 'transparent');
+        wrapWrapper.appendChild(btnWrapMenu);
         
         const wrapDropdown = el('div');
         setS(wrapDropdown, {
@@ -463,48 +528,15 @@ window.ImageManager = (function () {
             wrapDropdown.appendChild(item);
         });
         wrapWrapper.appendChild(wrapDropdown);
-        btnWrap.addEventListener('click', (e) => {
+        btnWrapMenu.addEventListener('click', (e) => {
             e.stopPropagation();
             wrapDropdown.style.display = wrapDropdown.style.display === 'none' ? 'block' : 'none';
+            inlineDropdown.style.display = 'none';
+            const resizeDropdown = imageToolbar.querySelector('.resize-dropdown-menu');
+            if (resizeDropdown) resizeDropdown.style.display = 'none';
         });
         imageToolbar.appendChild(wrapWrapper);
-
-        // 5. Break Text
-        const breakWrapper = el('div');
-        setS(breakWrapper, { position: 'relative' });
-        const btnBreak = addToolbarBtn(breakWrapper, 'fa-solid fa-arrows-up-down', 'Metni Böl (Break)');
         
-        const breakDropdown = el('div');
-        setS(breakDropdown, {
-            display: 'none', position: 'absolute', top: '100%', left: '0',
-            background: '#fff', border: '1px solid #d1d5db', borderRadius: '4px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '4px', minWidth: '120px', zIndex: '1000'
-        });
-        
-        ['Sola Yasla', 'Ortala', 'Sağa Yasla'].forEach((lbl, i) => {
-            const item = el('div');
-            setS(item, { padding:'4px 8px', fontSize:'13px', cursor:'pointer', color:'#374151', borderRadius:'3px' });
-            item.textContent = lbl;
-            item.addEventListener('mouseover', () => item.style.background = '#f3f4f6');
-            item.addEventListener('mouseout', () => item.style.background = 'transparent');
-            item.addEventListener('click', () => {
-                if (!activeImage) return;
-                const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
-                target.className = target.tagName === 'FIGURE' ? 'editor-image-figure' : 'editor-image';
-                const cls = i === 0 ? 'img-break-left' : (i === 1 ? 'img-break-center' : 'img-break-right');
-                target.classList.add(cls);
-                breakDropdown.style.display = 'none';
-                updateOverlayPosition();
-            });
-            breakDropdown.appendChild(item);
-        });
-        breakWrapper.appendChild(breakDropdown);
-        btnBreak.addEventListener('click', (e) => {
-            e.stopPropagation();
-            breakDropdown.style.display = breakDropdown.style.display === 'none' ? 'block' : 'none';
-        });
-        imageToolbar.appendChild(breakWrapper);
-
         addSep(imageToolbar);
 
         // 6. Resize
@@ -553,11 +585,11 @@ window.ImageManager = (function () {
                     scale = Math.max(1, Math.min(200, parseInt(input))) / 100;
                 }
                 const nw = activeImage.naturalWidth || 800;
-                const nh = activeImage.naturalHeight || 600;
-                activeImage.style.width = Math.round(nw * scale) + 'px';
-                activeImage.style.height = Math.round(nh * scale) + 'px';
+                const newWidth = Math.round(nw * scale);
+                activeImage.style.width = newWidth + 'px';
+                activeImage.style.height = 'auto';
                 if (activeImage.parentNode.tagName === 'FIGURE') {
-                    activeImage.parentNode.style.width = Math.round(nw * scale) + 'px';
+                    activeImage.parentNode.style.width = newWidth + 'px';
                 }
                 resizeDropdown.style.display = 'none';
                 updateOverlayPosition();
@@ -582,9 +614,9 @@ window.ImageManager = (function () {
 
         // Close dropdowns on outside click
         document.addEventListener('click', () => {
-            wrapDropdown.style.display = 'none';
-            breakDropdown.style.display = 'none';
-            resizeDropdown.style.display = 'none';
+            if (typeof wrapDropdown !== 'undefined') wrapDropdown.style.display = 'none';
+            if (typeof inlineDropdown !== 'undefined') inlineDropdown.style.display = 'none';
+            if (typeof resizeDropdown !== 'undefined') resizeDropdown.style.display = 'none';
         });
 
         const workspace = document.getElementById('editor-workspace');
