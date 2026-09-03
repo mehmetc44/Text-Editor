@@ -7,6 +7,7 @@
 window.ImageManager = (function () {
     let activeImage = null;
     let resizeOverlay = null;
+    let imageToolbar = null;
 
     // IndexedDB for local persistent storage of uploaded image files by relative path
     const DB_NAME = 'MeditörImageStore';
@@ -58,10 +59,14 @@ window.ImageManager = (function () {
         editor.addEventListener('click', (e) => {
             if (e.target.tagName === 'IMG') {
                 selectImage(e.target);
-            } else if (!e.target.closest('.resize-handle-box')) {
+            } else if (e.target.classList.contains('editor-image-caption')) {
+                // Ignore clicks on captions so we can edit them
+            } else if (!e.target.closest('.resize-handle-box') && !e.target.closest('#image-toolbar')) {
                 clearImageSelection();
             }
         });
+
+        buildImageToolbar();
 
         // Reposition resize overlay on scroll or window resize
         const workspace = document.getElementById('editor-workspace') || window;
@@ -204,6 +209,19 @@ window.ImageManager = (function () {
         activeImage = img;
         img.classList.add('selected-image');
         createResizeOverlay(img);
+        if (imageToolbar) {
+            imageToolbar.style.display = 'flex';
+            // update caption button state
+            const btnCaption = imageToolbar.querySelector('[data-tool="caption"]');
+            if (btnCaption) {
+                if (activeImage.parentNode && activeImage.parentNode.tagName === 'FIGURE') {
+                    btnCaption.style.backgroundColor = '#e2e8f0';
+                } else {
+                    btnCaption.style.backgroundColor = 'transparent';
+                }
+            }
+        }
+        updateOverlayPosition();
     }
 
     function clearImageSelection() {
@@ -214,6 +232,9 @@ window.ImageManager = (function () {
         if (resizeOverlay && resizeOverlay.parentNode) {
             resizeOverlay.parentNode.removeChild(resizeOverlay);
             resizeOverlay = null;
+        }
+        if (imageToolbar) {
+            imageToolbar.style.display = 'none';
         }
     }
 
@@ -236,6 +257,22 @@ window.ImageManager = (function () {
         const badge = resizeOverlay.querySelector('.resize-size-badge');
         if (badge) {
             badge.textContent = `${Math.round(imgRect.width)} × ${Math.round(imgRect.height)} px`;
+        }
+
+        if (imageToolbar && activeImage) {
+            // Position toolbar below the image
+            const tbRect = imageToolbar.getBoundingClientRect();
+            let tTop = top + imgRect.height + 10;
+            let tLeft = left + (imgRect.width / 2) - (tbRect.width / 2);
+            
+            // Boundary checks for toolbar
+            if (tTop + tbRect.height > wsRect.height + workspace.scrollTop) {
+                tTop = top - tbRect.height - 10; // place above if no space below
+            }
+            if (tLeft < 0) tLeft = 10;
+            
+            imageToolbar.style.top = `${tTop}px`;
+            imageToolbar.style.left = `${tLeft}px`;
         }
     }
 
@@ -304,6 +341,258 @@ window.ImageManager = (function () {
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function el(tag) { return document.createElement(tag); }
+    function setS(element, styles) { Object.assign(element.style, styles); }
+
+    function addToolbarBtn(parent, iconClass, title, dataTool) {
+        const btn = el('button');
+        btn.type = 'button';
+        btn.title = title;
+        if (dataTool) btn.setAttribute('data-tool', dataTool);
+        setS(btn, {
+            display:'flex', alignItems:'center', justifyContent:'center',
+            width:'28px', height:'28px', border:'none', background:'transparent',
+            borderRadius:'4px', cursor:'pointer', color:'#374151', fontSize:'14px'
+        });
+        btn.innerHTML = `<i class="${iconClass}"></i>`;
+        btn.addEventListener('mouseover', () => btn.style.backgroundColor = '#e2e8f0');
+        btn.addEventListener('mouseout', () => {
+            if (btn.getAttribute('data-tool') === 'caption' && activeImage && activeImage.parentNode && activeImage.parentNode.tagName === 'FIGURE') {
+                btn.style.backgroundColor = '#e2e8f0';
+            } else {
+                btn.style.backgroundColor = 'transparent';
+            }
+        });
+        parent.appendChild(btn);
+        return btn;
+    }
+
+    function addSep(parent) {
+        const sep = el('div');
+        setS(sep, { width:'1px', height:'16px', backgroundColor:'#d1d5db', margin:'0 2px' });
+        parent.appendChild(sep);
+    }
+
+    function buildImageToolbar() {
+        if (document.getElementById('image-toolbar')) return;
+
+        imageToolbar = el('div');
+        imageToolbar.id = 'image-toolbar';
+        setS(imageToolbar, {
+            display:'none', position:'absolute', zIndex:'99999',
+            background:'#ffffff', border:'1px solid #d1d5db',
+            boxShadow:'0 4px 12px rgba(0,0,0,0.1)', borderRadius:'6px',
+            padding:'4px', alignItems:'center', gap:'2px',
+            userSelect:'none', fontFamily:'system-ui,sans-serif'
+        });
+        imageToolbar.addEventListener('mousedown', e => e.preventDefault());
+
+        // 1. Caption Toggle
+        const btnCaption = addToolbarBtn(imageToolbar, 'fa-solid fa-closed-captioning', 'Açıklama Ekle/Kaldır', 'caption');
+        btnCaption.addEventListener('click', () => {
+            if (!activeImage) return;
+            const parent = activeImage.parentNode;
+            if (parent && parent.tagName === 'FIGURE') {
+                // Remove caption
+                parent.replaceWith(activeImage);
+                btnCaption.style.backgroundColor = 'transparent';
+            } else {
+                // Add caption
+                const figure = el('figure');
+                figure.className = 'editor-image-figure';
+                figure.setAttribute('contenteditable', 'false');
+                activeImage.replaceWith(figure);
+                figure.appendChild(activeImage);
+                const figcaption = el('figcaption');
+                figcaption.className = 'editor-image-caption';
+                figcaption.setAttribute('contenteditable', 'true');
+                figure.appendChild(figcaption);
+                btnCaption.style.backgroundColor = '#e2e8f0';
+                figcaption.focus();
+            }
+            updateOverlayPosition();
+        });
+
+        // 2. Alt Text
+        const btnAlt = addToolbarBtn(imageToolbar, 'fa-solid fa-tags', 'Alt Metin Ekle');
+        btnAlt.addEventListener('click', () => {
+            if (!activeImage) return;
+            const newAlt = prompt('Görsel için Alt Metin girin:', activeImage.alt || '');
+            if (newAlt !== null) activeImage.alt = newAlt;
+        });
+
+        addSep(imageToolbar);
+
+        // 3. Inline
+        const btnInline = addToolbarBtn(imageToolbar, 'fa-solid fa-text-width', 'Satır İçi (Inline)');
+        btnInline.addEventListener('click', () => {
+            if (!activeImage) return;
+            const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
+            target.className = target.tagName === 'FIGURE' ? 'editor-image-figure img-inline' : 'editor-image img-inline';
+            updateOverlayPosition();
+        });
+
+        // 4. Wrap Text
+        const wrapWrapper = el('div');
+        setS(wrapWrapper, { position: 'relative' });
+        const btnWrap = addToolbarBtn(wrapWrapper, 'fa-solid fa-indent', 'Metni Kaydır (Wrap)');
+        
+        const wrapDropdown = el('div');
+        setS(wrapDropdown, {
+            display: 'none', position: 'absolute', top: '100%', left: '0',
+            background: '#fff', border: '1px solid #d1d5db', borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '4px', minWidth: '120px', zIndex: '1000'
+        });
+        
+        ['Sola Kaydır', 'Sağa Kaydır'].forEach((lbl, i) => {
+            const item = el('div');
+            setS(item, { padding:'4px 8px', fontSize:'13px', cursor:'pointer', color:'#374151', borderRadius:'3px' });
+            item.textContent = lbl;
+            item.addEventListener('mouseover', () => item.style.background = '#f3f4f6');
+            item.addEventListener('mouseout', () => item.style.background = 'transparent');
+            item.addEventListener('click', () => {
+                if (!activeImage) return;
+                const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
+                target.className = target.tagName === 'FIGURE' ? 'editor-image-figure' : 'editor-image';
+                target.classList.add(i === 0 ? 'img-wrap-left' : 'img-wrap-right');
+                wrapDropdown.style.display = 'none';
+                updateOverlayPosition();
+            });
+            wrapDropdown.appendChild(item);
+        });
+        wrapWrapper.appendChild(wrapDropdown);
+        btnWrap.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrapDropdown.style.display = wrapDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+        imageToolbar.appendChild(wrapWrapper);
+
+        // 5. Break Text
+        const breakWrapper = el('div');
+        setS(breakWrapper, { position: 'relative' });
+        const btnBreak = addToolbarBtn(breakWrapper, 'fa-solid fa-arrows-up-down', 'Metni Böl (Break)');
+        
+        const breakDropdown = el('div');
+        setS(breakDropdown, {
+            display: 'none', position: 'absolute', top: '100%', left: '0',
+            background: '#fff', border: '1px solid #d1d5db', borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '4px', minWidth: '120px', zIndex: '1000'
+        });
+        
+        ['Sola Yasla', 'Ortala', 'Sağa Yasla'].forEach((lbl, i) => {
+            const item = el('div');
+            setS(item, { padding:'4px 8px', fontSize:'13px', cursor:'pointer', color:'#374151', borderRadius:'3px' });
+            item.textContent = lbl;
+            item.addEventListener('mouseover', () => item.style.background = '#f3f4f6');
+            item.addEventListener('mouseout', () => item.style.background = 'transparent');
+            item.addEventListener('click', () => {
+                if (!activeImage) return;
+                const target = activeImage.parentNode.tagName === 'FIGURE' ? activeImage.parentNode : activeImage;
+                target.className = target.tagName === 'FIGURE' ? 'editor-image-figure' : 'editor-image';
+                const cls = i === 0 ? 'img-break-left' : (i === 1 ? 'img-break-center' : 'img-break-right');
+                target.classList.add(cls);
+                breakDropdown.style.display = 'none';
+                updateOverlayPosition();
+            });
+            breakDropdown.appendChild(item);
+        });
+        breakWrapper.appendChild(breakDropdown);
+        btnBreak.addEventListener('click', (e) => {
+            e.stopPropagation();
+            breakDropdown.style.display = breakDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+        imageToolbar.appendChild(breakWrapper);
+
+        addSep(imageToolbar);
+
+        // 6. Resize
+        const resizeWrapper = el('div');
+        setS(resizeWrapper, { position: 'relative' });
+        
+        const btnResize = el('button');
+        btnResize.type = 'button';
+        btnResize.title = 'Boyutlandır';
+        btnResize.innerHTML = `Original <i class="fa-solid fa-chevron-down" style="font-size:10px; margin-left:4px;"></i>`;
+        setS(btnResize, {
+            display:'flex', alignItems:'center', border:'none', background:'transparent',
+            padding:'0 6px', height:'28px', borderRadius:'4px', cursor:'pointer',
+            fontSize:'13px', color:'#374151', whiteSpace:'nowrap'
+        });
+        btnResize.addEventListener('mouseover', () => btnResize.style.background = '#e2e8f0');
+        btnResize.addEventListener('mouseout', () => btnResize.style.background = 'transparent');
+        
+        const resizeDropdown = el('div');
+        setS(resizeDropdown, {
+            display: 'none', position: 'absolute', top: '100%', left: '0',
+            background: '#fff', border: '1px solid #d1d5db', borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '4px', minWidth: '100px', zIndex: '1000'
+        });
+
+        const resizeOpts = [
+            { lbl: 'Original', scale: 1 },
+            { lbl: '%75', scale: 0.75 },
+            { lbl: '%50', scale: 0.50 },
+            { lbl: '%25', scale: 0.25 },
+            { lbl: 'Custom %', scale: 'custom' }
+        ];
+
+        resizeOpts.forEach(opt => {
+            const item = el('div');
+            setS(item, { padding:'4px 8px', fontSize:'13px', cursor:'pointer', color:'#374151', borderRadius:'3px' });
+            item.textContent = opt.lbl;
+            item.addEventListener('mouseover', () => item.style.background = '#f3f4f6');
+            item.addEventListener('mouseout', () => item.style.background = 'transparent');
+            item.addEventListener('click', () => {
+                if (!activeImage) return;
+                let scale = opt.scale;
+                if (scale === 'custom') {
+                    const input = prompt('Özel oran girin (ör: 55):', '55');
+                    if (!input || isNaN(input)) return;
+                    scale = Math.max(1, Math.min(200, parseInt(input))) / 100;
+                }
+                const nw = activeImage.naturalWidth || 800;
+                const nh = activeImage.naturalHeight || 600;
+                activeImage.style.width = Math.round(nw * scale) + 'px';
+                activeImage.style.height = Math.round(nh * scale) + 'px';
+                if (activeImage.parentNode.tagName === 'FIGURE') {
+                    activeImage.parentNode.style.width = Math.round(nw * scale) + 'px';
+                }
+                resizeDropdown.style.display = 'none';
+                updateOverlayPosition();
+            });
+            resizeDropdown.appendChild(item);
+        });
+        
+        resizeWrapper.appendChild(btnResize);
+        resizeWrapper.appendChild(resizeDropdown);
+        btnResize.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resizeDropdown.style.display = resizeDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+        imageToolbar.appendChild(resizeWrapper);
+
+        // 7. Edit Image (Dummy)
+        const btnEdit = addToolbarBtn(imageToolbar, 'fa-solid fa-pen', 'Görseli Düzenle');
+        btnEdit.addEventListener('click', () => {
+            // Dummy button for future edit logic
+            console.log('Edit Image Clicked');
+        });
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', () => {
+            wrapDropdown.style.display = 'none';
+            breakDropdown.style.display = 'none';
+            resizeDropdown.style.display = 'none';
+        });
+
+        const workspace = document.getElementById('editor-workspace');
+        if (workspace) {
+            workspace.appendChild(imageToolbar);
+        } else {
+            document.body.appendChild(imageToolbar);
+        }
     }
 
     return {

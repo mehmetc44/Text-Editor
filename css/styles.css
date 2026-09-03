@@ -348,3 +348,66 @@ h1, h2, h3, h4,
     background-color: #e2e8f0;
     transform: scale(1.2);
 }
+
+/* ═══════════════ IMAGE ALIGNMENT & WRAP ═══════════════ */
+.editor-image-figure {
+    display: inline-block;
+    text-align: center;
+    margin: 4px;
+    max-width: 100%;
+}
+
+.editor-image-caption {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    text-align: center;
+    outline: none;
+    min-height: 1lh; /* allows empty captions to be clicked */
+}
+.editor-image-caption:empty::before {
+    content: "Açıklama ekle...";
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Image Wrap classes */
+.img-wrap-left {
+    float: left;
+    margin: 0 16px 16px 0 !important;
+}
+
+.img-wrap-right {
+    float: right;
+    margin: 0 0 16px 16px !important;
+}
+
+/* Image Break classes */
+.img-break-left {
+    display: block;
+    float: none;
+    margin: 16px auto 16px 0 !important;
+    clear: both;
+}
+
+.img-break-center {
+    display: block;
+    float: none;
+    margin: 16px auto !important;
+    clear: both;
+}
+
+.img-break-right {
+    display: block;
+    float: none;
+    margin: 16px 0 16px auto !important;
+    clear: both;
+}
+
+.img-inline {
+    display: inline-block;
+    float: none;
+    margin: 0;
+    clear: none;
+}
