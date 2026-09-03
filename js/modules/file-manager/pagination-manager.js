@@ -8,7 +8,7 @@ window.PaginationManager = (function () {
 
     function createPageCard(pageIndex) {
         const card = document.createElement('div');
-        card.className = 'a4-page-card';
+        card.className = 'a4-page-card border-none outline-none focus:outline-none';
         card.id = `page-card-${pageIndex + 1}`;
 
         const content = document.createElement('div');
@@ -16,7 +16,7 @@ window.PaginationManager = (function () {
             content.id = 'editor';
             content.setAttribute('data-placeholder', 'Metninizi buraya yazmaya başlayın...');
         }
-        content.className = 'page-content';
+        content.className = 'page-content border-0 outline-none focus:outline-none focus:ring-0';
         content.setAttribute('contenteditable', 'true');
         content.setAttribute('spellcheck', 'true');
         

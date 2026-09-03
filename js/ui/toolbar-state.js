@@ -269,6 +269,50 @@ window.ToolbarUI = (function () {
             window.EditorSelection.applyInlineStyle('fontSize', e.target.value);
         });
 
+        document.getElementById('select-line-height')?.addEventListener('change', (e) => {
+            editor.focus();
+            const val = e.target.value;
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+
+            const range = sel.getRangeAt(0);
+            const blockTags = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'TD', 'TH'];
+            
+            let commonAncestor = range.commonAncestorContainer;
+            if (commonAncestor.nodeType === 3) commonAncestor = commonAncestor.parentNode;
+
+            const blocks = [];
+            if (blockTags.includes(commonAncestor.tagName)) {
+                blocks.push(commonAncestor);
+            }
+            
+            if (commonAncestor.querySelectorAll) {
+                commonAncestor.querySelectorAll(blockTags.join(',')).forEach(el => {
+                    if (sel.containsNode(el, true)) {
+                        blocks.push(el);
+                    }
+                });
+            }
+
+            if (blocks.length === 0) {
+                let current = range.startContainer;
+                while (current && !current.classList?.contains('page-content') && current.id !== 'editor') {
+                    if (current.nodeType === 1 && blockTags.includes(current.tagName)) {
+                        blocks.push(current);
+                        break;
+                    }
+                    current = current.parentNode;
+                }
+            }
+
+            blocks.forEach(block => {
+                block.style.lineHeight = val;
+            });
+            
+            // Trigger flow update since height might change
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
         // Renk Paleti Açılır Menüleri
         const btnTextColor = document.getElementById('btn-text-color');
         const dropdownTextColor = document.getElementById('dropdown-text-color');
