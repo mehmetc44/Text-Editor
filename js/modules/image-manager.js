@@ -255,14 +255,6 @@ window.ImageManager = (function () {
         positions.forEach(pos => {
             const dot = document.createElement('div');
             dot.className = `resize-dot resize-${pos}`;
-            if (pos.includes('n')) dot.style.top = '-5px';
-            if (pos.includes('s')) dot.style.bottom = '-5px';
-            if (pos.includes('w')) dot.style.left = '-5px';
-            if (pos.includes('e')) dot.style.right = '-5px';
-            if (pos === 'n' || pos === 's') dot.style.left = 'calc(50% - 4.5px)';
-            if (pos === 'w' || pos === 'e') dot.style.top = 'calc(50% - 4.5px)';
-            dot.style.cursor = `${pos}-resize`;
-
             dot.addEventListener('mousedown', (e) => startResizing(e, pos, img));
             resizeOverlay.appendChild(dot);
         });
