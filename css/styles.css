@@ -245,6 +245,10 @@ h1, h2, h3, h4,
     font-weight: 600;
 }
 
+.selected-cell {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
 .dark .emoji-item:hover {
     background-color: #334155;
 }

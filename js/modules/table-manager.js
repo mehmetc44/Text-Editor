@@ -52,13 +52,13 @@ window.TableManager = (function () {
         toolbar.addEventListener('mousedown', e => e.preventDefault());
 
         // ── 5 Dropdown Buttons ──
-        const colBtn   = addToolbarBtn(toolbar, 'fa-solid fa-table-columns', 'Column');
-        const rowBtn   = addToolbarBtn(toolbar, 'fa-solid fa-grip-lines',    'Row');
+        const colBtn   = addToolbarBtn(toolbar, 'fa-solid fa-table-columns', 'Sütun');
+        const rowBtn   = addToolbarBtn(toolbar, 'fa-solid fa-grip-lines',    'Satır');
         addSep(toolbar);
-        const mergeBtn = addToolbarBtn(toolbar, 'fa-solid fa-object-ungroup','Merge / Split');
+        const mergeBtn = addToolbarBtn(toolbar, 'fa-solid fa-object-ungroup','Birleştir / Böl');
         addSep(toolbar);
-        const tblBtn   = addToolbarBtn(toolbar, 'fa-solid fa-table',         'Table properties');
-        const cellBtn  = addToolbarBtn(toolbar, 'fa-solid fa-border-all',    'Cell properties');
+        const tblBtn   = addToolbarBtn(toolbar, 'fa-solid fa-table',         'Tablo Özellikleri');
+        const cellBtn  = addToolbarBtn(toolbar, 'fa-solid fa-border-all',    'Hücre Özellikleri');
 
         // dropdowns
         const ddCol   = buildColumnDD();
@@ -163,41 +163,41 @@ window.TableManager = (function () {
     /* ── Column Dropdown ── */
     function buildColumnDD() {
         const dd = ddPanel();
-        dd.appendChild(ddToggle('Header column',
-            () => activeTable && Array.from(activeTable.rows).every(r => r.cells[0]?.tagName === 'TH'),
-            (v) => { if (!activeTable) return; Array.from(activeTable.rows).forEach(tr => swapTag(tr.cells[0], v ? 'th' : 'td')); }
+        dd.appendChild(ddToggle('Başlık Sütunu',
+            () => activeCell && activeTable && Array.from(activeTable.rows).every(r => r.cells[activeCell.cellIndex]?.tagName === 'TH'),
+            (v) => { if (!activeCell || !activeTable) return; const ci = activeCell.cellIndex; Array.from(activeTable.rows).forEach(tr => { if(tr.cells[ci]) swapTag(tr.cells[ci], v ? 'th' : 'td'); }); }
         ));
-        dd.appendChild(ddItem('Insert column left',  'fa-solid fa-arrow-left',  () => colInsert('left')));
-        dd.appendChild(ddItem('Insert column right', 'fa-solid fa-arrow-right', () => colInsert('right')));
-        dd.appendChild(ddItem('Delete column',       'fa-solid fa-trash-can',   () => colDelete(), '#dc2626'));
+        dd.appendChild(ddItem('Sola sütun ekle',  'fa-solid fa-arrow-left',  () => colInsert('left')));
+        dd.appendChild(ddItem('Sağa sütun ekle', 'fa-solid fa-arrow-right', () => colInsert('right')));
+        dd.appendChild(ddItem('Sütunu sil',       'fa-solid fa-trash-can',   () => colDelete(), '#dc2626'));
         dd.appendChild(ddDivider());
-        dd.appendChild(ddItem('Select column',       'fa-solid fa-arrow-pointer', () => colSelect()));
+        dd.appendChild(ddItem('Sütunu seç',       'fa-solid fa-arrow-pointer', () => colSelect()));
         return dd;
     }
     /* ── Row Dropdown ── */
     function buildRowDD() {
         const dd = ddPanel();
-        dd.appendChild(ddToggle('Header row',
-            () => activeTable && activeTable.rows[0] && Array.from(activeTable.rows[0].cells).every(c => c.tagName === 'TH'),
-            (v) => { if (!activeTable || !activeTable.rows[0]) return; Array.from(activeTable.rows[0].cells).forEach(c => swapTag(c, v ? 'th' : 'td')); }
+        dd.appendChild(ddToggle('Başlık Satırı',
+            () => activeCell && activeCell.parentElement && Array.from(activeCell.parentElement.cells).every(c => c.tagName === 'TH'),
+            (v) => { if (!activeCell || !activeCell.parentElement) return; Array.from(activeCell.parentElement.cells).forEach(c => swapTag(c, v ? 'th' : 'td')); }
         ));
-        dd.appendChild(ddItem('Insert row above', 'fa-solid fa-arrow-up',   () => rowInsert('above')));
-        dd.appendChild(ddItem('Insert row below', 'fa-solid fa-arrow-down', () => rowInsert('below')));
-        dd.appendChild(ddItem('Delete row',       'fa-solid fa-trash-can',  () => rowDelete(), '#dc2626'));
+        dd.appendChild(ddItem('Yukarıya satır ekle', 'fa-solid fa-arrow-up',   () => rowInsert('above')));
+        dd.appendChild(ddItem('Aşağıya satır ekle', 'fa-solid fa-arrow-down', () => rowInsert('below')));
+        dd.appendChild(ddItem('Satırı sil',       'fa-solid fa-trash-can',  () => rowDelete(), '#dc2626'));
         dd.appendChild(ddDivider());
-        dd.appendChild(ddItem('Select row',       'fa-solid fa-arrow-pointer', () => rowSelect()));
+        dd.appendChild(ddItem('Satırı seç',       'fa-solid fa-arrow-pointer', () => rowSelect()));
         return dd;
     }
     /* ── Merge / Split Dropdown ── */
     function buildMergeDD() {
         const dd = ddPanel();
-        dd.appendChild(ddItem('Merge cell up',    'fa-solid fa-arrow-up',      () => mergeCell('up')));
-        dd.appendChild(ddItem('Merge cell right', 'fa-solid fa-arrow-right',   () => mergeCell('right')));
-        dd.appendChild(ddItem('Merge cell down',  'fa-solid fa-arrow-down',    () => mergeCell('down')));
-        dd.appendChild(ddItem('Merge cell left',  'fa-solid fa-arrow-left',    () => mergeCell('left')));
+        dd.appendChild(ddItem('Yukarıdaki ile birleştir',    'fa-solid fa-arrow-up',      () => mergeCell('up')));
+        dd.appendChild(ddItem('Sağdaki ile birleştir', 'fa-solid fa-arrow-right',   () => mergeCell('right')));
+        dd.appendChild(ddItem('Aşağıdaki ile birleştir',  'fa-solid fa-arrow-down',    () => mergeCell('down')));
+        dd.appendChild(ddItem('Soldaki ile birleştir',  'fa-solid fa-arrow-left',    () => mergeCell('left')));
         dd.appendChild(ddDivider());
-        dd.appendChild(ddItem('Split cell vertically',   'fa-solid fa-arrows-left-right', () => splitCell('v')));
-        dd.appendChild(ddItem('Split cell horizontally', 'fa-solid fa-arrows-up-down',    () => splitCell('h')));
+        dd.appendChild(ddItem('Hücreyi dikey böl',   'fa-solid fa-arrows-left-right', () => splitCell('v')));
+        dd.appendChild(ddItem('Hücreyi yatay böl', 'fa-solid fa-arrows-up-down',    () => splitCell('h')));
         return dd;
     }
     /* ── Table Properties Panel ── */
@@ -207,39 +207,39 @@ window.TableManager = (function () {
         dd.innerHTML = `
             <div style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
                 <i class="fa-solid fa-chevron-left" style="font-size:10px;cursor:pointer;color:#6b7280" data-close></i>
-                Table properties
+                Tablo Özellikleri
             </div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Border</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Kenarlık</div>
             <div style="display:flex;gap:6px;margin-bottom:10px">
-                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Style</div>
+                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Stil</div>
                     <select data-tbl-border-style style="width:100%;padding:4px;border:1px solid #d1d5db;border-radius:4px;font-size:12px">
-                        <option value="solid">Solid</option><option value="dotted">Dotted</option>
-                        <option value="dashed">Dashed</option><option value="double">Double</option>
-                        <option value="none">None</option>
+                        <option value="solid">Düz</option><option value="dotted">Noktalı</option>
+                        <option value="dashed">Kesik</option><option value="double">Çift</option>
+                        <option value="none">Yok</option>
                     </select></div>
-                <div style="flex:0 0 50px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Width</div>
+                <div style="flex:0 0 50px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Kalınlık</div>
                     <input data-tbl-border-width value="1px" style="width:100%;padding:4px;border:1px solid #d1d5db;border-radius:4px;font-size:12px"></div>
-                <div style="flex:0 0 40px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Color</div>
+                <div style="flex:0 0 40px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Renk</div>
                     <input type="color" data-tbl-border-color value="#d1d5db" style="width:32px;height:28px;border:none;padding:0;cursor:pointer"></div>
             </div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Dimensions</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Boyutlar</div>
             <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
-                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Width</div>
+                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Genişlik</div>
                     <input data-tbl-width value="100%" style="width:100%;padding:4px;border:1px solid #d1d5db;border-radius:4px;font-size:12px"></div>
                 <span style="margin-top:14px;color:#9ca3af">×</span>
-                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Height</div>
+                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Yükseklik</div>
                     <input data-tbl-height value="" placeholder="auto" style="width:100%;padding:4px;border:1px solid #d1d5db;border-radius:4px;font-size:12px"></div>
             </div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Background</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Arka Plan</div>
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
-                <span style="font-size:12px">Color</span>
+                <span style="font-size:12px">Renk</span>
                 <input type="color" data-tbl-bg value="#ffffff" style="width:28px;height:24px;border:none;padding:0;cursor:pointer">
             </div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:6px;font-weight:600">Table Alignment</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:6px;font-weight:600">Tablo Hizalaması</div>
             <div data-tbl-align-row style="display:flex;gap:4px;margin-bottom:14px"></div>
             <div style="display:flex;justify-content:flex-end;gap:8px">
-                <button type="button" data-cancel style="padding:6px 16px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px">Cancel</button>
-                <button type="button" data-save style="padding:6px 16px;border:none;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Save</button>
+                <button type="button" data-cancel style="padding:6px 16px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px">İptal</button>
+                <button type="button" data-save style="padding:6px 16px;border:none;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Kaydet</button>
             </div>`;
 
         // Alignment buttons
@@ -311,29 +311,29 @@ window.TableManager = (function () {
         dd.innerHTML = `
             <div style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
                 <i class="fa-solid fa-chevron-left" style="font-size:10px;cursor:pointer;color:#6b7280" data-close></i>
-                Cell properties
+                Hücre Özellikleri
             </div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Border</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Kenarlık</div>
             <div style="display:flex;gap:6px;margin-bottom:10px">
-                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Style</div>
+                <div style="flex:1"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Stil</div>
                     <select data-cell-border-style style="width:100%;padding:4px;border:1px solid #d1d5db;border-radius:4px;font-size:12px">
-                        <option value="solid">Solid</option><option value="dotted">Dotted</option>
-                        <option value="dashed">Dashed</option><option value="double">Double</option>
-                        <option value="none">None</option>
+                        <option value="solid">Düz</option><option value="dotted">Noktalı</option>
+                        <option value="dashed">Kesik</option><option value="double">Çift</option>
+                        <option value="none">Yok</option>
                     </select></div>
-                <div style="flex:0 0 50px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Width</div>
+                <div style="flex:0 0 50px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Kalınlık</div>
                     <input data-cell-border-width value="1px" style="width:100%;padding:4px;border:1px solid #d1d5db;border-radius:4px;font-size:12px"></div>
-                <div style="flex:0 0 40px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Color</div>
+                <div style="flex:0 0 40px"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px">Renk</div>
                     <input type="color" data-cell-border-color value="#d1d5db" style="width:32px;height:28px;border:none;padding:0;cursor:pointer"></div>
             </div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Background</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600">Arka Plan</div>
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
-                <span style="font-size:12px">Color</span>
+                <span style="font-size:12px">Renk</span>
                 <input type="color" data-cell-bg value="#ffffff" style="width:28px;height:24px;border:none;padding:0;cursor:pointer">
             </div>
             <div style="display:flex;justify-content:flex-end;gap:8px">
-                <button type="button" data-cancel style="padding:6px 16px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px">Cancel</button>
-                <button type="button" data-save style="padding:6px 16px;border:none;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Save</button>
+                <button type="button" data-cancel style="padding:6px 16px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px">İptal</button>
+                <button type="button" data-save style="padding:6px 16px;border:none;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Kaydet</button>
             </div>`;
         dd.querySelector('[data-close]')?.addEventListener('click', (e) => { e.stopPropagation(); closeDD(); });
         dd.querySelector('[data-cancel]')?.addEventListener('click', (e) => { e.stopPropagation(); closeDD(); });
@@ -402,6 +402,9 @@ window.TableManager = (function () {
             activeTable.style.outline = '';
             removeHandles();
         }
+        if (activeTable) {
+            activeTable.querySelectorAll('.selected-cell').forEach(c => c.classList.remove('selected-cell'));
+        }
 
         activeTable = table;
         activeCell = cell;
@@ -430,7 +433,11 @@ window.TableManager = (function () {
     function deselectTable() {
         closeDD();
         if (activeCell) { activeCell.style.outline = ''; activeCell = null; }
-        if (activeTable) { activeTable.style.outline = ''; activeTable = null; }
+        if (activeTable) { 
+            activeTable.querySelectorAll('.selected-cell').forEach(c => c.classList.remove('selected-cell'));
+            activeTable.style.outline = ''; 
+            activeTable = null; 
+        }
         removeHandles();
         hideToolbar();
     }
@@ -615,8 +622,9 @@ window.TableManager = (function () {
     function colSelect() {
         if (!activeCell || !activeTable) return;
         const ci = activeCell.cellIndex;
+        activeTable.querySelectorAll('.selected-cell').forEach(c => c.classList.remove('selected-cell'));
         Array.from(activeTable.rows).forEach(tr => {
-            if (tr.cells[ci]) tr.cells[ci].style.backgroundColor = 'rgba(59,130,246,.12)';
+            if (tr.cells[ci]) tr.cells[ci].classList.add('selected-cell');
         });
     }
 
@@ -636,8 +644,9 @@ window.TableManager = (function () {
         activeCell = null; fire(); deselectTable();
     }
     function rowSelect() {
-        if (!activeCell) return;
-        Array.from(activeCell.parentElement.cells).forEach(c => { c.style.backgroundColor = 'rgba(59,130,246,.12)'; });
+        if (!activeCell || !activeTable) return;
+        activeTable.querySelectorAll('.selected-cell').forEach(c => c.classList.remove('selected-cell'));
+        Array.from(activeCell.parentElement.cells).forEach(c => { c.classList.add('selected-cell'); });
     }
 
     function mergeCell(dir) {
