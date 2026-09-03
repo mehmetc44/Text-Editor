@@ -253,37 +253,61 @@ window.DocxManager = (function () {
         document.body.appendChild(overlay);
 
         try {
-            // Düzenleyiciyi klonlayıp resim src'lerini base64 yapalım
-            const clone = editor.cloneNode(true);
-            const images = clone.querySelectorAll('img');
+            // Editör içeriğinin temiz bir kopyasını kendimiz oluşturalım
+            const pagesContainer = document.getElementById('pages-container') || editor;
+            const clone = pagesContainer.cloneNode(true);
 
-            for (let i = 0; i < images.length; i++) {
-                const img = images[i];
-                const originalSrc = img.src;
+            // Arayüz çöplerini temizleyelim
+            clone.querySelectorAll('.page-number-corner, .resize-handle-box').forEach(el => el.remove());
+            clone.querySelectorAll('.selected-image').forEach(el => el.classList.remove('selected-image'));
+            clone.querySelectorAll('.selected-cell').forEach(el => el.classList.remove('selected-cell'));
 
-                if (originalSrc.startsWith('blob:') || originalSrc.startsWith('http')) {
+            // Orijinal görünür resimleri (file:// veya blob: gibi kısıtlamalara takılmadan) canvas ile çekelim
+            const origImages = pagesContainer.querySelectorAll('img');
+            const cloneImages = clone.querySelectorAll('img');
+
+            for (let i = 0; i < origImages.length; i++) {
+                const origImg = origImages[i];
+                const cloneImg = cloneImages[i];
+
+                if (origImg.src && !origImg.src.startsWith('data:')) {
                     try {
-                        const response = await fetch(originalSrc);
-                        const blob = await response.blob();
-                        const base64 = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result);
-                            reader.readAsDataURL(blob);
-                        });
-                        img.src = base64;
+                        // Canvas API ile ekrandaki mevcut pikselleri kopyala (fetch ve cors bypass)
+                        const canvas = document.createElement("canvas");
+                        canvas.width = origImg.naturalWidth || origImg.width || 800;
+                        canvas.height = origImg.naturalHeight || origImg.height || 600;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(origImg, 0, 0, canvas.width, canvas.height);
+                        
+                        const base64 = canvas.toDataURL("image/png");
+                        cloneImg.src = base64;
                     } catch (e) {
-                        console.warn('Görsel base64 yapılamadı:', originalSrc, e);
+                        console.warn("Canvas ile base64'e çevrilemedi:", e);
                     }
                 }
+                
+                // Gereksiz data-rel-src'yi temizle
+                cloneImg.removeAttribute('data-rel-src');
             }
 
-            const cleanHtml = window.FileManager.getCleanExportHtml(clone);
+            // Temiz HTML'i birleştir
+            let cleanHtml = '';
+            const pageContents = clone.querySelectorAll('.page-content');
+            if (pageContents.length > 0) {
+                pageContents.forEach(part => cleanHtml += part.innerHTML);
+            } else {
+                cleanHtml = clone.innerHTML;
+            }
+
             const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Belge</title></head><body>`;
             const footer = "</body></html>";
             const sourceHTML = header + cleanHtml + footer;
 
             if (window.htmlDocx) {
-                const converted = window.htmlDocx.asBlob(sourceHTML, { orientation: 'portrait', margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 } });
+                // html-to-docx returns a Promise<Blob>
+                const converted = await window.htmlDocx(sourceHTML, null, { 
+                    margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 } 
+                });
                 const url = URL.createObjectURL(converted);
                 const a = document.createElement('a');
                 a.href = url;
@@ -291,7 +315,7 @@ window.DocxManager = (function () {
                 a.click();
                 URL.revokeObjectURL(url);
             } else {
-                // html-docx.js yüklenemediyse eski yöntem (.doc)
+                // htmlDocx yüklenemediyse eski yöntem (.doc)
                 const blob = new Blob(['\ufeff' + sourceHTML], { type: 'application/msword' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
