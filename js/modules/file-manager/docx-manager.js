@@ -233,20 +233,79 @@ window.DocxManager = (function () {
         reader.readAsText(file);
     }
 
-    function exportDocx(editor) {
+    async function exportDocx(editor) {
         if (!editor || !window.FileManager) return;
-        const cleanHtml = window.FileManager.getCleanExportHtml(editor);
-        const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Belge</title></head><body>`;
-        const footer = "</body></html>";
-        const sourceHTML = header + cleanHtml + footer;
 
-        const blob = new Blob(['\ufeff' + sourceHTML], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'belge.doc';
-        a.click();
-        URL.revokeObjectURL(url);
+        // Yükleniyor bildirimi
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        overlay.style.zIndex = '999999';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.color = 'white';
+        overlay.innerHTML = '<div style="text-align:center"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:40px;margin-bottom:16px;"></i><div style="font-family:system-ui,sans-serif;font-weight:600">Word dosyası hazırlanıyor...</div></div>';
+        document.body.appendChild(overlay);
+
+        try {
+            // Düzenleyiciyi klonlayıp resim src'lerini base64 yapalım
+            const clone = editor.cloneNode(true);
+            const images = clone.querySelectorAll('img');
+
+            for (let i = 0; i < images.length; i++) {
+                const img = images[i];
+                const originalSrc = img.src;
+
+                if (originalSrc.startsWith('blob:') || originalSrc.startsWith('http')) {
+                    try {
+                        const response = await fetch(originalSrc);
+                        const blob = await response.blob();
+                        const base64 = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                        img.src = base64;
+                    } catch (e) {
+                        console.warn('Görsel base64 yapılamadı:', originalSrc, e);
+                    }
+                }
+            }
+
+            const cleanHtml = window.FileManager.getCleanExportHtml(clone);
+            const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Belge</title></head><body>`;
+            const footer = "</body></html>";
+            const sourceHTML = header + cleanHtml + footer;
+
+            if (window.htmlDocx) {
+                const converted = window.htmlDocx.asBlob(sourceHTML, { orientation: 'portrait', margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 } });
+                const url = URL.createObjectURL(converted);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'belge.docx';
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                // html-docx.js yüklenemediyse eski yöntem (.doc)
+                const blob = new Blob(['\ufeff' + sourceHTML], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'belge.doc';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        } catch (err) {
+            console.error('Word dışa aktarma hatası:', err);
+            alert('Word dosyası oluşturulurken hata meydana geldi.');
+        } finally {
+            document.body.removeChild(overlay);
+        }
     }
 
     return {
