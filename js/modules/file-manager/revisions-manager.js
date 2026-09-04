@@ -119,6 +119,20 @@ window.RevisionsManager = (function () {
 
     // ── Save ──
 
+    async function clearAllRevisions() {
+        try {
+            const db = await openDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).clear();
+            const revisionsList = document.getElementById('revisions-list');
+            if (revisionsList) {
+                revisionsList.innerHTML = `<div class="p-6 text-center text-slate-400"><i class="fa-regular fa-clock text-2xl mb-2 block"></i>Henüz kaydedilmiş bir revizyon bulunmuyor.</div>`;
+            }
+        } catch (e) {
+            console.warn('Revizyon temizleme hatası:', e);
+        }
+    }
+
     async function saveRevision(editor, title = '') {
         const now = new Date();
         const dateStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR');
@@ -333,6 +347,7 @@ window.RevisionsManager = (function () {
     return {
         saveRevision,
         renderRevisions,
-        captureSnapshot
+        captureSnapshot,
+        clearAllRevisions
     };
 })();

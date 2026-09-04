@@ -393,18 +393,23 @@ window.ToolbarUI = (function () {
         const tbNew = document.getElementById('tb-new');
         const menuFileNew = document.getElementById('menu-file-new');
 
-        const clearContent = () => {
-            if (confirm('Belge içeriği temizlenecek. Emin misiniz?')) {
+        const clearContent = async () => {
+            if (confirm('Yeni bir belge açmak üzeresiniz.\nMevcut belgenin içeriği ve revizyon geçmişi kalıcı olarak silinecektir.\n\nBelgeyi dışa aktardınız mı? Devam etmek istiyor musunuz?')) {
                 editor.innerHTML = '';
                 const htmlTextarea = document.getElementById('html-textarea');
                 if (htmlTextarea) htmlTextarea.value = '';
+                
+                if (window.RevisionsManager) {
+                    await window.RevisionsManager.clearAllRevisions();
+                }
+                
                 updateStats(editor);
             }
         };
 
-        if (btnClearAll) btnClearAll.addEventListener('click', clearContent);
-        if (tbNew) tbNew.addEventListener('click', clearContent);
-        if (menuFileNew) menuFileNew.addEventListener('click', clearContent);
+        if (btnClearAll) btnClearAll.addEventListener('click', async (e) => { e.preventDefault(); await clearContent(); });
+        if (tbNew) tbNew.addEventListener('click', async (e) => { e.preventDefault(); await clearContent(); });
+        if (menuFileNew) menuFileNew.addEventListener('click', async (e) => { e.preventDefault(); await clearContent(); });
 
         // Modallar Kapatma
         const modalImage = document.getElementById('modal-image');
