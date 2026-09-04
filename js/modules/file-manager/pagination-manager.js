@@ -103,12 +103,9 @@ window.PaginationManager = (function () {
         for (let i = 0; i < contents.length; i++) {
             const page = contents[i];
             
-            // 1. Spill overflow to the next page
-            // We only shift if there's more than 1 child to avoid empty page loops for giant items
-            while (page.scrollHeight > page.clientHeight && page.childNodes.length > 1) {
-                const lastNode = page.lastChild;
+            // Helper to get or create next page
+            const getOrCreateNextPage = () => {
                 let nextPage = contents[i+1];
-                
                 if (!nextPage) {
                     const divider = createGapDivider();
                     pagesContainer.appendChild(divider);
@@ -119,9 +116,57 @@ window.PaginationManager = (function () {
                     bindEventsToPage(nextPage);
                     updatePageNumbers();
                 }
+                return nextPage;
+            };
+            
+            // 1. Spill overflow to the next page
+            while (page.scrollHeight > page.clientHeight) {
+                const lastNode = page.lastChild;
+                if (!lastNode) break;
+
+                let nextPage = getOrCreateNextPage();
                 
-                nextPage.prepend(lastNode);
-                changed = true;
+                if (lastNode.tagName === 'TABLE') {
+                    const tbody = lastNode.querySelector('tbody');
+                    if (tbody && tbody.children.length > 1) {
+                        // We can split the table
+                        let nextTable = nextPage.firstChild;
+                        if (!nextTable || nextTable.tagName !== 'TABLE') {
+                            nextTable = lastNode.cloneNode(false);
+                            
+                            const colgroup = lastNode.querySelector('colgroup');
+                            if (colgroup) nextTable.appendChild(colgroup.cloneNode(true));
+                            
+                            const thead = lastNode.querySelector('thead');
+                            if (thead) nextTable.appendChild(thead.cloneNode(true));
+                            
+                            const newTbody = document.createElement('tbody');
+                            nextTable.appendChild(newTbody);
+                            nextPage.prepend(nextTable);
+                        }
+                        
+                        const nextTbody = nextTable.querySelector('tbody');
+                        const lastRow = tbody.lastElementChild;
+                        nextTbody.prepend(lastRow);
+                        
+                        if (tbody.children.length === 0) lastNode.remove();
+                        changed = true;
+                        continue;
+                    } else if (page.childNodes.length > 1) {
+                        nextPage.prepend(lastNode);
+                        changed = true;
+                        continue;
+                    } else {
+                        break; // Cannot split further
+                    }
+                } else {
+                    if (page.childNodes.length > 1) {
+                        nextPage.prepend(lastNode);
+                        changed = true;
+                    } else {
+                        break;
+                    }
+                }
             }
 
             // 2. Pull underflow from the next page
@@ -129,11 +174,35 @@ window.PaginationManager = (function () {
             if (nextPage && page.scrollHeight <= page.clientHeight) {
                 while (nextPage.childNodes.length > 0) {
                     const firstNode = nextPage.firstChild;
+                    const lastNode = page.lastChild;
+                    
+                    if (lastNode && lastNode.tagName === 'TABLE' && firstNode.tagName === 'TABLE') {
+                        const sourceTbody = firstNode.querySelector('tbody');
+                        const targetTbody = lastNode.querySelector('tbody');
+                        if (sourceTbody && targetTbody && sourceTbody.children.length > 0) {
+                            const firstRow = sourceTbody.firstElementChild;
+                            targetTbody.appendChild(firstRow);
+                            
+                            if (page.scrollHeight > page.clientHeight) {
+                                sourceTbody.prepend(firstRow);
+                                break;
+                            }
+                            
+                            if (sourceTbody.children.length === 0) firstNode.remove();
+                            changed = true;
+                            continue;
+                        }
+                    }
+                    
                     page.appendChild(firstNode);
                     
-                    // Did pulling cause overflow?
                     if (page.scrollHeight > page.clientHeight && page.childNodes.length > 1) {
-                        nextPage.prepend(firstNode); // Push it back
+                        nextPage.prepend(firstNode);
+                        break;
+                    } else if (page.scrollHeight > page.clientHeight && page.childNodes.length === 1 && firstNode.tagName === 'TABLE') {
+                        // It was a table, and pulling it caused overflow, but it might be splittable!
+                        // Push it back and let the spill loop handle it on the next checkAndFlow pass.
+                        nextPage.prepend(firstNode);
                         break;
                     }
                     changed = true;

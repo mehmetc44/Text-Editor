@@ -50,7 +50,6 @@ window.WordSanitizer = (function () {
                     else el.classList.add('editor-table');
                 }
                 
-                if (!style.width) style.width = '100%';
                 style.maxWidth = '100%';
                 style.borderCollapse = 'collapse';
                 
