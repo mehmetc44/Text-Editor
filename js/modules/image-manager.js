@@ -76,31 +76,6 @@ window.ImageManager = (function () {
         // Rehydrate images stored in IndexedDB on init
         rehydrateImages(editor);
 
-        // Image Modal Tab Switchers
-        const tabImgFile = document.getElementById('tab-img-file');
-        const tabImgUrl = document.getElementById('tab-img-url');
-        const paneImgFile = document.getElementById('pane-img-file');
-        const paneImgUrl = document.getElementById('pane-img-url');
-
-        function switchTab(mode) {
-            if (mode === 'file') {
-                if (paneImgFile) paneImgFile.classList.remove('hidden');
-                if (paneImgUrl) paneImgUrl.classList.add('hidden');
-                if (tabImgFile) tabImgFile.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
-                if (tabImgUrl) tabImgUrl.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
-            } else {
-                if (paneImgUrl) paneImgUrl.classList.remove('hidden');
-                if (paneImgFile) paneImgFile.classList.add('hidden');
-                if (tabImgUrl) tabImgUrl.className = 'px-3 py-1.5 border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400';
-                if (tabImgFile) tabImgFile.className = 'px-3 py-1.5 text-slate-500 hover:text-slate-700';
-            }
-        }
-
-        if (tabImgFile && tabImgUrl) {
-            tabImgFile.addEventListener('click', () => switchTab('file'));
-            tabImgUrl.addEventListener('click', () => switchTab('url'));
-        }
-
         // Submenu Image Button Triggers
         const btnMenuImgFile = document.getElementById('menu-insert-image-file');
         const btnMenuImgUrl = document.getElementById('menu-insert-image-url');
@@ -110,7 +85,6 @@ window.ImageManager = (function () {
         if (btnMenuImgFile && modalImage) {
             btnMenuImgFile.addEventListener('click', (e) => {
                 e.preventDefault();
-                switchTab('file');
                 modalImage.classList.remove('hidden');
             });
         }
@@ -118,7 +92,6 @@ window.ImageManager = (function () {
         if (btnMenuImgUrl && modalImage) {
             btnMenuImgUrl.addEventListener('click', (e) => {
                 e.preventDefault();
-                switchTab('url');
                 modalImage.classList.remove('hidden');
             });
         }
@@ -126,7 +99,6 @@ window.ImageManager = (function () {
         if (btnModalImage && modalImage) {
             btnModalImage.addEventListener('click', (e) => {
                 e.preventDefault();
-                switchTab('file');
                 modalImage.classList.remove('hidden');
             });
         }
@@ -136,28 +108,15 @@ window.ImageManager = (function () {
 
         if (btnInsertImageConfirm) {
             btnInsertImageConfirm.addEventListener('click', async () => {
-                const urlInput = document.getElementById('input-img-url');
                 const fileInput = document.getElementById('input-img-file');
-                const folderInput = document.getElementById('input-img-folder');
-                const altInput = document.getElementById('input-img-alt');
-
-                const folderPath = folderInput ? folderInput.value.trim() || 'data/belge1/img/' : 'data/belge1/img/';
-                const altText = altInput ? altInput.value : '';
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     const file = fileInput.files[0];
-                    const relPath = `${folderPath.endsWith('/') ? folderPath : folderPath + '/'}${file.name}`;
-                    
-                    // Save to IndexedDB locally
-                    await saveLocalImageBlob(relPath, file);
-                    
-                    // Display live object URL without Base64 in HTML
+
+                    // Display live object URL
                     const displayUrl = URL.createObjectURL(file);
-                    insertImage(editor, displayUrl, altText, relPath, onUpdateStats);
+                    insertImage(editor, displayUrl, '', '', onUpdateStats);
                     fileInput.value = '';
-                } else if (urlInput && urlInput.value.trim()) {
-                    const customPath = urlInput.value.trim();
-                    insertImage(editor, customPath, altText, customPath, onUpdateStats);
                 }
 
                 if (modalImage) modalImage.classList.add('hidden');
