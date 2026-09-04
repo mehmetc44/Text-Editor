@@ -8,7 +8,7 @@ function initApp() {
     if (!editor) return;
 
     // MS Word Paragraf Varsayılanı Ayarla
-    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { }
 
     // Modülleri Sırasıyla Başlat
     if (window.WordSanitizer) {
@@ -45,11 +45,14 @@ function initApp() {
         window.FindReplaceManager.init();
     }
 
+    if (window.HistoryManager) {
+        window.HistoryManager.init();
+    }
+
     if (window.ToolbarUI) {
         window.ToolbarUI.init(editor);
     }
 
-    console.log("Meditör modüler frontend mimarisi ile başarıyla başlatıldı.");
 }
 
 if (document.readyState === 'loading') {
