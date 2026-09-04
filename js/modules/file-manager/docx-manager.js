@@ -102,9 +102,8 @@ window.DocxManager = (function () {
                             htmlOutput = logoHtml + htmlOutput;
                         }
 
-                        // 5. HTML'i sanitize et (word-page-break div'leri korunarak)
-                        const cleanHtml = window.WordSanitizer.sanitizeWordHtml(htmlOutput);
-                        const finalHtml = cleanHtml || htmlOutput;
+                        // 5. Mammoth zaten temiz HTML üretir, ekstra temizliğe gerek yok.
+                        const finalHtml = htmlOutput;
 
                         // 6. PaginationManager ile sayfa kırılmalarını tespit et ve çoklu kart oluştur
                         if (window.PaginationManager && window.PaginationManager.splitByPageBreaks) {
