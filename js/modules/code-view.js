@@ -15,31 +15,50 @@ window.CodeView = (function () {
         const htmlEditorContainer = document.getElementById('html-editor-container');
         const htmlPreviewPanel = document.getElementById('html-preview-panel');
         const previewContent = document.getElementById('preview-content');
+        const pagesContainer = document.getElementById('pages-container');
 
-        if (btnToggleHtml && htmlTextarea && htmlEditorContainer) {
+        if (btnToggleHtml && htmlTextarea && htmlEditorContainer && pagesContainer) {
             btnToggleHtml.addEventListener('click', () => {
                 isHtmlMode = !isHtmlMode;
                 if (isHtmlMode) {
                     htmlTextarea.value = window.FileManager.getCleanExportHtml(editor);
-                    editor.classList.add('hidden');
+                    pagesContainer.classList.add('hidden');
                     htmlEditorContainer.classList.remove('hidden');
+                    
+                    if (isPreviewMode) {
+                        isPreviewMode = false;
+                        htmlPreviewPanel.classList.add('hidden');
+                    }
                 } else {
-                    editor.innerHTML = htmlTextarea.value;
+                    if (window.PaginationManager) {
+                        window.PaginationManager.rebuildPages([htmlTextarea.value]);
+                    } else {
+                        editor.innerHTML = htmlTextarea.value;
+                    }
                     htmlEditorContainer.classList.add('hidden');
-                    editor.classList.remove('hidden');
+                    pagesContainer.classList.remove('hidden');
                     window.FileManager.updateStats(editor);
                 }
             });
         }
 
-        if (btnTogglePreview && htmlPreviewPanel && previewContent) {
+        if (btnTogglePreview && htmlPreviewPanel && previewContent && pagesContainer) {
             btnTogglePreview.addEventListener('click', () => {
                 isPreviewMode = !isPreviewMode;
                 if (isPreviewMode) {
                     previewContent.innerHTML = isHtmlMode ? htmlTextarea.value : window.FileManager.getCleanExportHtml(editor);
+                    pagesContainer.classList.add('hidden');
+                    if (isHtmlMode) {
+                        htmlEditorContainer.classList.add('hidden');
+                    }
                     htmlPreviewPanel.classList.remove('hidden');
                 } else {
                     htmlPreviewPanel.classList.add('hidden');
+                    if (isHtmlMode) {
+                        htmlEditorContainer.classList.remove('hidden');
+                    } else {
+                        pagesContainer.classList.remove('hidden');
+                    }
                 }
             });
         }
