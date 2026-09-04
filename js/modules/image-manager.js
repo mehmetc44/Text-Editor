@@ -1,56 +1,13 @@
 /**
  * Image Manager & Live 8-Point Drag Resizer Overlay Module
- * Features: Local persistent storage (IndexedDB), clean relative path references (No Base64), 
- * and precise drag-to-resize overlay with live size badge.
+ * Features: In-memory blob URL display, DOCX export embeds images as real files.
+ * Precise drag-to-resize overlay with live size badge.
  */
 
 window.ImageManager = (function () {
     let activeImage = null;
     let resizeOverlay = null;
     let imageToolbar = null;
-
-    // IndexedDB for local persistent storage of uploaded image files by relative path
-    const DB_NAME = 'MeditörImageStore';
-    const DB_VERSION = 1;
-    const STORE_NAME = 'local_images';
-
-    function openDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME, { keyPath: 'path' });
-                }
-            };
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async function saveLocalImageBlob(path, blob) {
-        try {
-            const db = await openDB();
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            tx.objectStore(STORE_NAME).put({ path, blob, updatedAt: Date.now() });
-        } catch (e) {
-            console.warn('IndexedDB resim kayıt hatası:', e);
-        }
-    }
-
-    async function getLocalImageBlob(path) {
-        try {
-            const db = await openDB();
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const req = tx.objectStore(STORE_NAME).get(path);
-            return new Promise((resolve) => {
-                req.onsuccess = () => resolve(req.result ? req.result.blob : null);
-                req.onerror = () => resolve(null);
-            });
-        } catch (e) {
-            return null;
-        }
-    }
 
     function init(editor, onUpdateStats) {
         if (!editor) return;
@@ -73,8 +30,6 @@ window.ImageManager = (function () {
         workspace.addEventListener('scroll', updateOverlayPosition);
         window.addEventListener('resize', updateOverlayPosition);
 
-        // Rehydrate images stored in IndexedDB on init
-        rehydrateImages(editor);
 
         // Submenu Image Button Triggers
         const btnMenuImgFile = document.getElementById('menu-insert-image-file');
@@ -124,19 +79,7 @@ window.ImageManager = (function () {
         }
     }
 
-    async function rehydrateImages(editor) {
-        if (!editor) return;
-        const images = editor.querySelectorAll('img[data-rel-src]');
-        for (const img of images) {
-            const relSrc = img.getAttribute('data-rel-src');
-            if (relSrc && relSrc.startsWith('data/')) {
-                const blob = await getLocalImageBlob(relSrc);
-                if (blob) {
-                    img.src = URL.createObjectURL(blob);
-                }
-            }
-        }
-    }
+
 
     function insertImage(editor, displaySrc, alt = '', relPath = '', onUpdateStats) {
         if (!editor || !displaySrc) return;
@@ -590,9 +533,6 @@ window.ImageManager = (function () {
         init,
         insertImage,
         selectImage,
-        clearImageSelection,
-        rehydrateImages,
-        saveLocalImageBlob,
-        getLocalImageBlob
+        clearImageSelection
     };
 })();
