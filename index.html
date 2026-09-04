@@ -718,29 +718,33 @@
     <div id="modal-revisions"
         class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
         <div
-            class="bg-white dark:bg-slate-800 rounded-md shadow-2xl border border-slate-300 dark:border-slate-700 max-w-md w-full overflow-hidden text-xs">
+            class="bg-white dark:bg-slate-800 rounded-md shadow-2xl border border-slate-300 dark:border-slate-700 max-w-lg w-full overflow-hidden text-xs flex flex-col max-h-[80vh]">
             <div
-                class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200 shrink-0">
                 <span><i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i>Revizyon Geçmişi</span>
                 <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600"><i
                         class="fa-solid fa-xmark text-sm"></i></button>
             </div>
-            <div class="p-4 space-y-3">
-                <p class="text-slate-500 dark:text-slate-400">Kaydedilen belge versiyonları aşağıda listelenmiştir.
-                    İstediğiniz an herhangi bir revizyona geri dönebilirsiniz.</p>
+            <div class="px-4 pt-3 pb-1 shrink-0">
+                <p class="text-slate-500 dark:text-slate-400 text-[11px] leading-tight">
+                    <i class="fa-solid fa-circle-info text-blue-400 mr-1"></i>
+                    Görseller, tablolar ve tüm biçimlendirmeler dahil olmak üzere belgenin tam anlık görüntüsü kaydedilir. Her 2 dakikada otomatik kayıt yapılır.
+                </p>
+            </div>
+            <div class="flex-1 overflow-y-auto px-4 pb-2 min-h-0">
                 <div id="revisions-list"
-                    class="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded divide-y divide-slate-200 dark:divide-slate-700">
+                    class="border border-slate-200 dark:border-slate-700 rounded divide-y divide-slate-200 dark:divide-slate-700 mt-2">
                     <!-- Dinamik Revizyonlar -->
                 </div>
             </div>
             <div
-                class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-between items-center">
+                class="px-4 py-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-300 dark:border-slate-700 flex justify-between items-center shrink-0">
                 <button type="button" id="btn-modal-save-revision"
-                    class="px-3 py-1.5 rounded bg-amber-500 hover:bg-amber-600 text-white font-medium">
+                    class="px-3 py-1.5 rounded bg-amber-500 hover:bg-amber-600 text-white font-medium transition-colors">
                     <i class="fa-solid fa-plus mr-1"></i>Yeni Revizyon Kaydet
                 </button>
                 <button type="button"
-                    class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800">Kapat</button>
+                    class="btn-close-modal px-3 py-1.5 rounded border border-slate-300 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors">Kapat</button>
             </div>
         </div>
     </div>

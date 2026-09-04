@@ -111,23 +111,26 @@ window.FileManager = (function () {
         });
 
         // Revisions Listeners
-        document.getElementById('menu-save-revision')?.addEventListener('click', () => {
-            if (window.RevisionsManager) window.RevisionsManager.saveRevision(editor);
+        document.getElementById('menu-save-revision')?.addEventListener('click', async () => {
+            if (window.RevisionsManager) await window.RevisionsManager.saveRevision(editor);
         });
-        document.getElementById('btn-modal-save-revision')?.addEventListener('click', () => {
-            if (window.RevisionsManager) window.RevisionsManager.saveRevision(editor);
+        document.getElementById('btn-modal-save-revision')?.addEventListener('click', async () => {
+            if (window.RevisionsManager) {
+                await window.RevisionsManager.saveRevision(editor);
+                await window.RevisionsManager.renderRevisions(editor);
+            }
         });
-        document.getElementById('tb-save')?.addEventListener('click', (e) => {
+        document.getElementById('tb-save')?.addEventListener('click', async (e) => {
             e.preventDefault();
             if (window.RevisionsManager) {
-                window.RevisionsManager.saveRevision(editor, 'Mevcut Kayıt');
+                await window.RevisionsManager.saveRevision(editor, 'Mevcut Kayıt');
                 alert('Belge revizyonu başarıyla kaydedildi.');
             }
         });
 
         const modalRevisions = document.getElementById('modal-revisions');
-        document.getElementById('menu-open-revisions')?.addEventListener('click', () => {
-            if (window.RevisionsManager) window.RevisionsManager.renderRevisions(editor);
+        document.getElementById('menu-open-revisions')?.addEventListener('click', async () => {
+            if (window.RevisionsManager) await window.RevisionsManager.renderRevisions(editor);
             if (modalRevisions) modalRevisions.classList.remove('hidden');
         });
     }
